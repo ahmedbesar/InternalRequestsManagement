@@ -8,4 +8,6 @@ namespace InternalRequestsManagement.OrganizationUnits;
 public interface IOrganizationUnitLookupAppService : IApplicationService
 {
     Task<ListResultDto<OrganizationUnitLookupDto>> GetChildrenAsync(Guid? parentId);
+
+    Task<ListResultDto<OrganizationUnitLookupDto>> GetUserOrganizationUnitPathAsync(Guid userId);
 }

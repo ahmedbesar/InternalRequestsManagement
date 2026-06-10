@@ -48,4 +48,24 @@ public class CustomIdentityUserAppService : IdentityUserAppService
 
         return userDto;
     }
+
+    [Authorize(IdentityPermissions.Users.Update)]
+    public override async Task<IdentityUserDto> UpdateAsync(Guid id, IdentityUserUpdateDto input)
+    {
+        var organizationUnitId = input.GetProperty<Guid>(IdentityUserExtensionPropertyNames.OrganizationUnitId);
+        if (organizationUnitId == Guid.Empty)
+        {
+            throw new BusinessException(InternalRequestsManagementDomainErrorCodes.OrganizationUnitRequired);
+        }
+
+        await _organizationUnitRepository.GetAsync(organizationUnitId);
+
+        var userDto = await base.UpdateAsync(id, input);
+
+        await UserManager.SetOrganizationUnitsAsync(id, organizationUnitId);
+
+        await CurrentUnitOfWork!.SaveChangesAsync();
+
+        return userDto;
+    }
 }

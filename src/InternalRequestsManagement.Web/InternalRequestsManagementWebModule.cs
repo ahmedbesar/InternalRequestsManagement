@@ -233,7 +233,6 @@ public class InternalRequestsManagementWebModule : AbpModule
                 options.FileSets.ReplaceEmbeddedByPhysical<InternalRequestsManagementApplicationModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}InternalRequestsManagement.Application", Path.DirectorySeparatorChar)));
                 options.FileSets.ReplaceEmbeddedByPhysical<InternalRequestsManagementHttpApiModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}src{0}InternalRequestsManagement.HttpApi", Path.DirectorySeparatorChar)));
                 options.FileSets.ReplaceEmbeddedByPhysical<InternalRequestsManagementWebModule>(hostingEnvironment.ContentRootPath);
-
             }
         });
     }

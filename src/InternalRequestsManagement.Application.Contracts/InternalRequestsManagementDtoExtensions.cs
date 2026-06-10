@@ -22,6 +22,14 @@ public static class InternalRequestsManagementDtoExtensions
                     {
                         property.Attributes.Add(new RequiredAttribute());
                     });
+
+            ObjectExtensionManager.Instance
+                .AddOrUpdateProperty<IdentityUserUpdateDto, Guid>(
+                    IdentityUserExtensionPropertyNames.OrganizationUnitId,
+                    property =>
+                    {
+                        property.Attributes.Add(new RequiredAttribute());
+                    });
         });
     }
 }
