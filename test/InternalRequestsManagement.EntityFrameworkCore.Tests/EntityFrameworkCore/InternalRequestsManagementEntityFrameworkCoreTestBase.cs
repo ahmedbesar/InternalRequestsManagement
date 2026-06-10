@@ -1,0 +1,8 @@
+﻿using Volo.Abp;
+
+namespace InternalRequestsManagement.EntityFrameworkCore;
+
+public abstract class InternalRequestsManagementEntityFrameworkCoreTestBase : InternalRequestsManagementTestBase<InternalRequestsManagementEntityFrameworkCoreTestModule>
+{
+
+}

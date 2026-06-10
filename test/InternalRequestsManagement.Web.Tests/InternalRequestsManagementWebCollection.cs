@@ -1,0 +1,8 @@
+﻿using InternalRequestsManagement.EntityFrameworkCore;
+
+namespace InternalRequestsManagement;
+
+public class InternalRequestsManagementWebCollection : InternalRequestsManagementEntityFrameworkCoreCollectionFixtureBase
+{
+
+}

@@ -1,0 +1,10 @@
+using InternalRequestsManagement.Samples;
+using Xunit;
+
+namespace InternalRequestsManagement.EntityFrameworkCore.Applications;
+
+[Collection(InternalRequestsManagementTestConsts.CollectionDefinitionName)]
+public class EfCoreSampleAppServiceTests : SampleAppServiceTests<InternalRequestsManagementEntityFrameworkCoreTestModule>
+{
+
+}

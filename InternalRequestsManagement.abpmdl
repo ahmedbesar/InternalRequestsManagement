@@ -1,0 +1,113 @@
+{
+  "template": "app",
+  "imports": {
+    "Volo.Abp.LeptonXLiteTheme": {
+      "version": "5.4.0",
+      "isInstalled": true,
+      "creationTime": "06/10/2026 15:03:39 +00:00"
+    },
+    "Volo.Abp.Account": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "06/10/2026 15:03:39 +00:00"
+    },
+    "Volo.Abp.OpenIddict": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "06/10/2026 15:03:39 +00:00"
+    },
+    "Volo.Abp.Identity": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "06/10/2026 15:03:39 +00:00"
+    },
+    "Volo.Abp.TenantManagement": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "06/10/2026 15:03:39 +00:00"
+    },
+    "Volo.Abp.SettingManagement": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "06/10/2026 15:03:39 +00:00"
+    },
+    "Volo.Abp.PermissionManagement": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "06/10/2026 15:03:39 +00:00"
+    },
+    "Volo.Abp.FeatureManagement": {
+      "version": "10.4.0",
+      "isInstalled": true,
+      "creationTime": "06/10/2026 15:03:39 +00:00"
+    }
+  },
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {}
+    }
+  },
+  "packages": {
+    "InternalRequestsManagement.Application": {
+      "path": "src/InternalRequestsManagement.Application/InternalRequestsManagement.Application.abppkg",
+      "folder": "src"
+    },
+    "InternalRequestsManagement.Application.Tests": {
+      "path": "test/InternalRequestsManagement.Application.Tests/InternalRequestsManagement.Application.Tests.abppkg",
+      "folder": "test"
+    },
+    "InternalRequestsManagement.Domain.Shared": {
+      "path": "src/InternalRequestsManagement.Domain.Shared/InternalRequestsManagement.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "InternalRequestsManagement.Application.Contracts": {
+      "path": "src/InternalRequestsManagement.Application.Contracts/InternalRequestsManagement.Application.Contracts.abppkg",
+      "folder": "src"
+    },
+    "InternalRequestsManagement.HttpApi": {
+      "path": "src/InternalRequestsManagement.HttpApi/InternalRequestsManagement.HttpApi.abppkg",
+      "folder": "src"
+    },
+    "InternalRequestsManagement.HttpApi.Client": {
+      "path": "src/InternalRequestsManagement.HttpApi.Client/InternalRequestsManagement.HttpApi.Client.abppkg",
+      "folder": "src"
+    },
+    "InternalRequestsManagement.Web": {
+      "path": "src/InternalRequestsManagement.Web/InternalRequestsManagement.Web.abppkg",
+      "folder": "src"
+    },
+    "InternalRequestsManagement.Web.Tests": {
+      "path": "test/InternalRequestsManagement.Web.Tests/InternalRequestsManagement.Web.Tests.abppkg",
+      "folder": "test"
+    },
+    "InternalRequestsManagement.EntityFrameworkCore.Tests": {
+      "path": "test/InternalRequestsManagement.EntityFrameworkCore.Tests/InternalRequestsManagement.EntityFrameworkCore.Tests.abppkg",
+      "folder": "test"
+    },
+    "InternalRequestsManagement.EntityFrameworkCore": {
+      "path": "src/InternalRequestsManagement.EntityFrameworkCore/InternalRequestsManagement.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "InternalRequestsManagement.TestBase": {
+      "path": "test/InternalRequestsManagement.TestBase/InternalRequestsManagement.TestBase.abppkg",
+      "folder": "test"
+    },
+    "InternalRequestsManagement.Domain.Tests": {
+      "path": "test/InternalRequestsManagement.Domain.Tests/InternalRequestsManagement.Domain.Tests.abppkg",
+      "folder": "test"
+    },
+    "InternalRequestsManagement.HttpApi.Client.ConsoleTestApp": {
+      "path": "test/InternalRequestsManagement.HttpApi.Client.ConsoleTestApp/InternalRequestsManagement.HttpApi.Client.ConsoleTestApp.abppkg",
+      "folder": "test"
+    },
+    "InternalRequestsManagement.DbMigrator": {
+      "path": "src/InternalRequestsManagement.DbMigrator/InternalRequestsManagement.DbMigrator.abppkg",
+      "folder": "src"
+    },
+    "InternalRequestsManagement.Domain": {
+      "path": "src/InternalRequestsManagement.Domain/InternalRequestsManagement.Domain.abppkg",
+      "folder": "src"
+    }
+  }
+}

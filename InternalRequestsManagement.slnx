@@ -1,0 +1,24 @@
+<Solution>
+    <Configurations>
+        <Platform Name="Any CPU" />
+    </Configurations>
+    <Folder Name="/src/">
+        <Project Path="src/InternalRequestsManagement.Domain/InternalRequestsManagement.Domain.csproj" />
+        <Project Path="src/InternalRequestsManagement.Application/InternalRequestsManagement.Application.csproj" />
+        <Project Path="src/InternalRequestsManagement.EntityFrameworkCore/InternalRequestsManagement.EntityFrameworkCore.csproj" />
+        <Project Path="src/InternalRequestsManagement.Web/InternalRequestsManagement.Web.csproj" />
+        <Project Path="src/InternalRequestsManagement.Domain.Shared/InternalRequestsManagement.Domain.Shared.csproj" />
+        <Project Path="src/InternalRequestsManagement.Application.Contracts/InternalRequestsManagement.Application.Contracts.csproj" />
+        <Project Path="src/InternalRequestsManagement.HttpApi/InternalRequestsManagement.HttpApi.csproj" />
+        <Project Path="src/InternalRequestsManagement.HttpApi.Client/InternalRequestsManagement.HttpApi.Client.csproj" />
+        <Project Path="src/InternalRequestsManagement.DbMigrator/InternalRequestsManagement.DbMigrator.csproj" />
+    </Folder>
+    <Folder Name="/test/">
+        <Project Path="test/InternalRequestsManagement.Application.Tests/InternalRequestsManagement.Application.Tests.csproj" />
+        <Project Path="test/InternalRequestsManagement.Web.Tests/InternalRequestsManagement.Web.Tests.csproj" />
+        <Project Path="test/InternalRequestsManagement.EntityFrameworkCore.Tests/InternalRequestsManagement.EntityFrameworkCore.Tests.csproj" />
+        <Project Path="test/InternalRequestsManagement.TestBase/InternalRequestsManagement.TestBase.csproj" />
+        <Project Path="test/InternalRequestsManagement.Domain.Tests/InternalRequestsManagement.Domain.Tests.csproj" />
+        <Project Path="test/InternalRequestsManagement.HttpApi.Client.ConsoleTestApp/InternalRequestsManagement.HttpApi.Client.ConsoleTestApp.csproj" />
+    </Folder>
+</Solution>

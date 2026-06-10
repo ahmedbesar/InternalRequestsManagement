@@ -1,0 +1,9 @@
+﻿using Xunit;
+
+namespace InternalRequestsManagement.EntityFrameworkCore;
+
+[CollectionDefinition(InternalRequestsManagementTestConsts.CollectionDefinitionName)]
+public class InternalRequestsManagementEntityFrameworkCoreCollection : ICollectionFixture<InternalRequestsManagementEntityFrameworkCoreFixture>
+{
+
+}

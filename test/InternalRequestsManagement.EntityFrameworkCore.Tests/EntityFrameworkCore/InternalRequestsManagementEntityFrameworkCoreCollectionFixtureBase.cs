@@ -1,0 +1,9 @@
+﻿using InternalRequestsManagement.EntityFrameworkCore;
+using Xunit;
+
+namespace InternalRequestsManagement.EntityFrameworkCore;
+
+public class InternalRequestsManagementEntityFrameworkCoreCollectionFixtureBase : ICollectionFixture<InternalRequestsManagementEntityFrameworkCoreFixture>
+{
+
+}
