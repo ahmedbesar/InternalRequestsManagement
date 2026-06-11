@@ -26,6 +26,8 @@
     "Requester": "Requester",
     "AssignedUser": "Assigned To",
     "DueDate": "Due Date",
+    "CreationTime": "Created",
+    "View": "View",
     "Justification": "Justification",
     "StatusChangeNote": "Note",
     "ChangeStatus": "Change Status",

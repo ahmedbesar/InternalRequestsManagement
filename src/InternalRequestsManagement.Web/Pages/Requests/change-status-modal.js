@@ -32,6 +32,7 @@
                         }
                         abp.notify.success(l('SuccessfullySaved'));
                         publicApi.close();
+                        window.location.reload();
                     });
                 });
             }
