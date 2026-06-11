@@ -20,11 +20,10 @@ public class InternalRequestsManagementMenuContributor : IMenuContributor
         }
     }
 
-    private static Task ConfigureMainMenuAsync(MenuConfigurationContext context)
+    private static async Task ConfigureMainMenuAsync(MenuConfigurationContext context)
     {
         var l = context.GetLocalizer<InternalRequestsManagementResource>();
 
-        //Home
         context.Menu.AddItem(
             new ApplicationMenuItem(
                 InternalRequestsManagementMenus.Home,
@@ -35,14 +34,37 @@ public class InternalRequestsManagementMenuContributor : IMenuContributor
             )
         );
 
+        if (await context.IsGrantedAsync(InternalRequestsManagementPermissions.Dashboard.Default))
+        {
+            context.Menu.AddItem(
+                new ApplicationMenuItem(
+                    InternalRequestsManagementMenus.Dashboard,
+                    l["Menu:Dashboard"],
+                    "/Dashboard",
+                    icon: "fa fa-tachometer-alt",
+                    order: 2
+                )
+            );
+        }
 
-        //Administration
+        if (await context.IsGrantedAsync(InternalRequestsManagementPermissions.Requests.Default))
+        {
+            context.Menu.AddItem(
+                new ApplicationMenuItem(
+                    InternalRequestsManagementMenus.Requests,
+                    l["Menu:Requests"],
+                    "/Requests",
+                    icon: "fa fa-tasks",
+                    order: 3
+                )
+            );
+        }
+
         var administration = context.Menu.GetAdministration();
         administration.Order = 6;
 
-        //Administration->Identity
         administration.SetSubItemOrder(IdentityMenuNames.GroupName, 1);
-    
+
         if (MultiTenancyConsts.IsEnabled)
         {
             administration.SetSubItemOrder(TenantManagementMenuNames.GroupName, 1);
@@ -51,12 +73,8 @@ public class InternalRequestsManagementMenuContributor : IMenuContributor
         {
             administration.TryRemoveMenuItem(TenantManagementMenuNames.GroupName);
         }
-        
-        administration.SetSubItemOrder(SettingManagementMenuNames.GroupName, 3);
 
-        //Administration->Settings
+        administration.SetSubItemOrder(SettingManagementMenuNames.GroupName, 3);
         administration.SetSubItemOrder(SettingManagementMenuNames.GroupName, 8);
-        
-        return Task.CompletedTask;
     }
 }
