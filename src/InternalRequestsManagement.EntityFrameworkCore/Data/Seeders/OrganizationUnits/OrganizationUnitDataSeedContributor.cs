@@ -75,6 +75,10 @@ public class OrganizationUnitDataSeedContributor : IDataSeedContributor, ITransi
             _currentTenant.Id);
 
         await _organizationUnitManager.CreateAsync(organizationUnit);
+
+        // Persist immediately so the next sibling's Code is computed against the
+        // already-saved sibling. Without this, ABP assigns identical codes to siblings.
+        await _unitOfWorkManager.Current!.SaveChangesAsync();
         return organizationUnit;
     }
 }
