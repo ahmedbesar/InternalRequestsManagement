@@ -9,7 +9,7 @@ using Volo.Abp.Identity;
 
 namespace InternalRequestsManagement.OrganizationUnits;
 
-[Authorize(IdentityPermissions.Users.Default)]
+[Authorize]
 public class OrganizationUnitLookupAppService : ApplicationService, IOrganizationUnitLookupAppService
 {
     private readonly OrganizationUnitManager _organizationUnitManager;
@@ -32,6 +32,7 @@ public class OrganizationUnitLookupAppService : ApplicationService, IOrganizatio
         return new ListResultDto<OrganizationUnitLookupDto>(await MapWithHasChildrenAsync(children));
     }
 
+    [Authorize(IdentityPermissions.Users.Default)]
     public async Task<ListResultDto<OrganizationUnitLookupDto>> GetUserOrganizationUnitPathAsync(Guid userId)
     {
         var organizationUnits = await _userRepository.GetOrganizationUnitsAsync(userId);
@@ -43,6 +44,9 @@ public class OrganizationUnitLookupAppService : ApplicationService, IOrganizatio
 
         return await BuildPathAsync(organizationUnit.Id);
     }
+
+    public Task<ListResultDto<OrganizationUnitLookupDto>> GetPathAsync(Guid ouId)
+        => BuildPathAsync(ouId);
 
     private async Task<ListResultDto<OrganizationUnitLookupDto>> BuildPathAsync(Guid organizationUnitId)
     {
