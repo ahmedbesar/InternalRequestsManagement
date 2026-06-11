@@ -46,6 +46,7 @@ public class RequestManager : DomainService
         _clock = clock;
     }
 
+    /// <summary>Validates the business rules (active type valid for the OU, justification and due date requirements) and builds a new request.</summary>
     public async Task<Result<Request>> CreateAsync(
         string title,
         string description,
@@ -77,6 +78,7 @@ public class RequestManager : DomainService
         return Result.Ok(request);
     }
 
+    /// <summary>Re-validates the business rules and updates an existing request's details; rejected if the request is in a terminal status.</summary>
     public async Task<Result<Request>> UpdateAsync(
         Request request,
         Guid organizationUnitId,
@@ -107,6 +109,7 @@ public class RequestManager : DomainService
         return Result.Ok(request);
     }
 
+    /// <summary>Transitions the request to a new status, enforcing the allowed transition map and requiring a note for statuses that mandate one.</summary>
     public Result<Request> ChangeStatus(
         Request request,
         RequestStatus newStatus,
@@ -128,6 +131,7 @@ public class RequestManager : DomainService
         return Result.Ok(request);
     }
 
+    /// <summary>Assigns the request to a user, ensuring the user belongs to the request's OU subtree.</summary>
     public async Task<Result<Request>> AssignAsync(
         Request request,
         Guid assignedUserId,
@@ -154,6 +158,7 @@ public class RequestManager : DomainService
         return Result.Ok(request);
     }
 
+    /// <summary>Clears the request's current assignee.</summary>
     public Result<Request> Unassign(Request request)
     {
         request.Unassign();
