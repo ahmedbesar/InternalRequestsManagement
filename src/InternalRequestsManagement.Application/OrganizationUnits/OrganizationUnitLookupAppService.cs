@@ -17,21 +17,25 @@ public class OrganizationUnitLookupAppService : ApplicationService, IOrganizatio
     private readonly OrganizationUnitManager _organizationUnitManager;
     private readonly IdentityUserManager _identityUserManager;
     private readonly OrganizationUnitHierarchyManager _ouHierarchyManager;
+    private readonly OrganizationUnitLookupMapper _mapper;
 
     public OrganizationUnitLookupAppService(
         OrganizationUnitManager organizationUnitManager,
         IdentityUserManager identityUserManager,
-        OrganizationUnitHierarchyManager ouHierarchyManager)
+        OrganizationUnitHierarchyManager ouHierarchyManager,
+        OrganizationUnitLookupMapper mapper)
     {
         _organizationUnitManager = organizationUnitManager;
         _identityUserManager = identityUserManager;
         _ouHierarchyManager = ouHierarchyManager;
+        _mapper = mapper;
     }
 
     public async Task<ListResultDto<OrganizationUnitLookupDto>> GetChildrenAsync(Guid? parentId)
     {
         var children = await _organizationUnitManager.FindChildrenAsync(parentId);
-        return new ListResultDto<OrganizationUnitLookupDto>(await MapWithHasChildrenAsync(children));
+        return new ListResultDto<OrganizationUnitLookupDto>(
+            await _mapper.MapWithHasChildrenAsync(children));
     }
 
     [Authorize(IdentityPermissions.Users.Default)]
@@ -75,18 +79,5 @@ public class OrganizationUnitLookupAppService : ApplicationService, IOrganizatio
         }
 
         return new ListResultDto<OrganizationUnitLookupDto>(items);
-    }
-
-    private async Task<List<OrganizationUnitLookupDto>> MapWithHasChildrenAsync(List<OrganizationUnit> children)
-    {
-        var items = new OrganizationUnitLookupDto[children.Count];
-        for (var i = 0; i < children.Count; i++)
-        {
-            var child = children[i];
-            var grandChildren = await _organizationUnitManager.FindChildrenAsync(child.Id);
-            items[i] = OrganizationUnitLookupMapper.ToDto(child, grandChildren.Count > 0);
-        }
-
-        return items.ToList();
     }
 }
