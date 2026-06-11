@@ -15,17 +15,17 @@ namespace InternalRequestsManagement.OrganizationUnits;
 public class OrganizationUnitLookupAppService : ApplicationService, IOrganizationUnitLookupAppService
 {
     private readonly OrganizationUnitManager _organizationUnitManager;
-    private readonly IOrganizationUnitRepository _organizationUnitRepository;
-    private readonly IIdentityUserRepository _userRepository;
+    private readonly IdentityUserManager _identityUserManager;
+    private readonly OrganizationUnitHierarchyManager _ouHierarchyManager;
 
     public OrganizationUnitLookupAppService(
         OrganizationUnitManager organizationUnitManager,
-        IOrganizationUnitRepository organizationUnitRepository,
-        IIdentityUserRepository userRepository)
+        IdentityUserManager identityUserManager,
+        OrganizationUnitHierarchyManager ouHierarchyManager)
     {
         _organizationUnitManager = organizationUnitManager;
-        _organizationUnitRepository = organizationUnitRepository;
-        _userRepository = userRepository;
+        _identityUserManager = identityUserManager;
+        _ouHierarchyManager = ouHierarchyManager;
     }
 
     public async Task<ListResultDto<OrganizationUnitLookupDto>> GetChildrenAsync(Guid? parentId)
@@ -37,12 +37,12 @@ public class OrganizationUnitLookupAppService : ApplicationService, IOrganizatio
     [Authorize(IdentityPermissions.Users.Default)]
     public async Task<ListResultDto<OrganizationUnitLookupDto>> GetUserOrganizationUnitPathAsync(Guid userId)
     {
-        var organizationUnits = await _userRepository.GetOrganizationUnitsAsync(userId);
+        var user = await _identityUserManager.GetByIdAsync(userId);
+        var organizationUnits = await _identityUserManager.GetOrganizationUnitsAsync(user);
         var organizationUnit = organizationUnits.FirstOrDefault();
+
         if (organizationUnit == null)
-        {
             return new ListResultDto<OrganizationUnitLookupDto>(new List<OrganizationUnitLookupDto>());
-        }
 
         return await BuildPathAsync(organizationUnit.Id);
     }
@@ -54,47 +54,24 @@ public class OrganizationUnitLookupAppService : ApplicationService, IOrganizatio
         Guid organizationUnitId,
         CancellationToken cancellationToken = default)
     {
-        var ou = await _organizationUnitRepository.GetAsync(organizationUnitId, cancellationToken: cancellationToken);
+        var ou = await _ouHierarchyManager.GetAsync(organizationUnitId, cancellationToken);
 
-        var allOus = await _organizationUnitRepository.GetListAsync(cancellationToken: cancellationToken);
-        var subtreeOuIds = allOus
-            .Where(x => x.Code == ou.Code || x.Code.StartsWith(ou.Code + "."))
-            .Select(x => x.Id)
-            .ToList();
+        // ABP's GetUsersInOrganizationUnitAsync with includeChildren:true replaces the
+        // manual code-prefix loop that was here before.
+        var users = await _identityUserManager.GetUsersInOrganizationUnitAsync(ou, includeChildren: true);
 
-        var users = new List<IdentityUser>();
-        foreach (var ouId in subtreeOuIds)
-        {
-            var ouUsers = await _userRepository.GetListAsync(organizationUnitId: ouId, cancellationToken: cancellationToken);
-            users.AddRange(ouUsers);
-        }
-
-        var dtos = OrganizationUnitLookupMapper.ToDtos(users);
-
-        return new ListResultDto<UserLookupDto>(dtos);
+        return new ListResultDto<UserLookupDto>(OrganizationUnitLookupMapper.ToDtos(users));
     }
 
     private async Task<ListResultDto<OrganizationUnitLookupDto>> BuildPathAsync(Guid organizationUnitId)
     {
-        var path = new List<OrganizationUnit>();
-        var current = await _organizationUnitRepository.GetAsync(organizationUnitId);
-
-        while (true)
-        {
-            path.Insert(0, current);
-            if (!current.ParentId.HasValue)
-            {
-                break;
-            }
-
-            current = await _organizationUnitRepository.GetAsync(current.ParentId.Value);
-        }
+        var path = await _ouHierarchyManager.GetPathAsync(organizationUnitId);
 
         var items = new List<OrganizationUnitLookupDto>();
-        foreach (var organizationUnit in path)
+        foreach (var ou in path)
         {
-            var children = await _organizationUnitManager.FindChildrenAsync(organizationUnit.Id);
-            items.Add(OrganizationUnitLookupMapper.ToDto(organizationUnit, children.Count > 0));
+            var children = await _organizationUnitManager.FindChildrenAsync(ou.Id);
+            items.Add(OrganizationUnitLookupMapper.ToDto(ou, children.Count > 0));
         }
 
         return new ListResultDto<OrganizationUnitLookupDto>(items);

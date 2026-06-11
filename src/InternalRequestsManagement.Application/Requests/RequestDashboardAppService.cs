@@ -8,7 +8,6 @@ using InternalRequestsManagement.Permissions;
 using InternalRequestsManagement.Requests.Mappers;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Services;
-using Volo.Abp.Identity;
 using Volo.Abp.Timing;
 
 namespace InternalRequestsManagement.Requests;
@@ -16,24 +15,18 @@ namespace InternalRequestsManagement.Requests;
 [Authorize(InternalRequestsManagementPermissions.Requests.Default)]
 public class RequestDashboardAppService : ApplicationService, IRequestDashboardAppService
 {
-    private readonly IRequestRepository _requestRepository;
-    private readonly IOrganizationUnitRepository _organizationUnitRepository;
-    private readonly IIdentityUserRepository _userRepository;
+    private readonly RequestManager _requestManager;
+    private readonly OrganizationUnitHierarchyManager _organizationUnitHierarchyManager;
     private readonly IClock _clock;
-    private readonly OrganizationUnitSubtreeResolver _organizationUnitSubtreeResolver;
 
     public RequestDashboardAppService(
-        IRequestRepository requestRepository,
-        IOrganizationUnitRepository organizationUnitRepository,
-        IIdentityUserRepository userRepository,
-        IClock clock,
-        OrganizationUnitSubtreeResolver organizationUnitSubtreeResolver)
+        RequestManager requestManager,
+        OrganizationUnitHierarchyManager organizationUnitHierarchyManager,
+        IClock clock)
     {
-        _requestRepository = requestRepository;
-        _organizationUnitRepository = organizationUnitRepository;
-        _userRepository = userRepository;
+        _requestManager = requestManager;
+        _organizationUnitHierarchyManager = organizationUnitHierarchyManager;
         _clock = clock;
-        _organizationUnitSubtreeResolver = organizationUnitSubtreeResolver;
     }
 
     public async Task<RequestDashboardDto> GetAsync(
@@ -41,21 +34,18 @@ public class RequestDashboardAppService : ApplicationService, IRequestDashboardA
         CancellationToken cancellationToken = default)
     {
         // Dashboard summaries are scoped to the current user's OU subtree.
-        var userOus = await _userRepository.GetOrganizationUnitsAsync(
-            CurrentUser.Id!.Value, includeDetails: false, cancellationToken: cancellationToken);
-
-        var scopedOuIds = await _organizationUnitSubtreeResolver.ResolveUserScopedOuIdsAsync(
-            userOus, cancellationToken);
+        var scopedOuIds = await _organizationUnitHierarchyManager.ResolveUserScopedOuIdsAsync(
+            CurrentUser.Id!.Value, cancellationToken);
 
         var now = _clock.Now;
 
-        var openCount = await _requestRepository.GetOpenCountAsync(scopedOuIds, cancellationToken);
-        var overdueCount = await _requestRepository.GetOverdueCountAsync(scopedOuIds, now, cancellationToken);
-        var unassignedCount = await _requestRepository.GetUnassignedCountAsync(scopedOuIds, cancellationToken);
+        var openCount = await _requestManager.GetOpenCountAsync(scopedOuIds, cancellationToken);
+        var overdueCount = await _requestManager.GetOverdueCountAsync(scopedOuIds, now, cancellationToken);
+        var unassignedCount = await _requestManager.GetUnassignedCountAsync(scopedOuIds, cancellationToken);
 
-        var byStatus = await _requestRepository.GetCountByStatusAsync(scopedOuIds, cancellationToken);
-        var byType = await _requestRepository.GetCountByTypeAsync(scopedOuIds, cancellationToken);
-        var topAssignees = await _requestRepository.GetTopAssigneesAsync(scopedOuIds, 5, cancellationToken);
+        var byStatus = await _requestManager.GetCountByStatusAsync(scopedOuIds, cancellationToken);
+        var byType = await _requestManager.GetCountByTypeAsync(scopedOuIds, cancellationToken);
+        var topAssignees = await _requestManager.GetTopAssigneesAsync(scopedOuIds, 5, cancellationToken);
 
         var byStatusDtos = byStatus
             .OrderBy(x => x.Status)
@@ -84,18 +74,18 @@ public class RequestDashboardAppService : ApplicationService, IRequestDashboardA
     }
 
     private async Task<List<OuCountItemDto>> GetByOrganizationUnitAsync(
-        IReadOnlyList<Guid>? scopedOuIds,
+        IReadOnlyList<Guid> scopedOuIds,
         CancellationToken cancellationToken)
     {
-        var allOus = await _organizationUnitRepository.GetListAsync(cancellationToken: cancellationToken);
-        var ouLookup = allOus.ToDictionary(o => o.Id);
+        // Load the full OU lookup so every OU that appears in the count results
+        // has a display name available, even when the scope is wide.
+        var ouLookup = await _organizationUnitHierarchyManager.GetAllLookupAsync(cancellationToken);
 
-        // Use the already-resolved subtree IDs (or all OUs if admin with no scope)
-        var targetOuIds = scopedOuIds != null
+        IEnumerable<Guid> targetOuIds = scopedOuIds.Count > 0
             ? (IEnumerable<Guid>)scopedOuIds
-            : allOus.Select(o => o.Id);
+            : ouLookup.Keys;
 
-        var counts = await _requestRepository.GetCountByOrganizationUnitAsync(targetOuIds, cancellationToken);
+        var counts = await _requestManager.GetCountByOrganizationUnitAsync(targetOuIds, cancellationToken);
 
         return counts
             .Where(c => ouLookup.ContainsKey(c.OrganizationUnitId))
@@ -103,5 +93,4 @@ public class RequestDashboardAppService : ApplicationService, IRequestDashboardA
             .OrderByDescending(x => x.Count)
             .ToList();
     }
-
 }

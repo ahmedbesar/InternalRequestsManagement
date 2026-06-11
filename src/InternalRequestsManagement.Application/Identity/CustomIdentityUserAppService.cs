@@ -1,6 +1,7 @@
 ﻿using System;
 using Volo.Abp;
 using System.Threading.Tasks;
+using InternalRequestsManagement.OrganizationUnits;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -15,7 +16,7 @@ namespace InternalRequestsManagement.Identity;
 [ExposeServices(typeof(IIdentityUserAppService), typeof(IdentityUserAppService))]
 public class CustomIdentityUserAppService : IdentityUserAppService
 {
-    private readonly IOrganizationUnitRepository _organizationUnitRepository;
+    private readonly OrganizationUnitHierarchyManager _ouHierarchyManager;
 
     public CustomIdentityUserAppService(
         IdentityUserManager userManager,
@@ -23,10 +24,10 @@ public class CustomIdentityUserAppService : IdentityUserAppService
         IIdentityRoleRepository roleRepository,
         IOptions<IdentityOptions> identityOptions,
         IPermissionChecker permissionChecker,
-        IOrganizationUnitRepository organizationUnitRepository)
+        OrganizationUnitHierarchyManager ouHierarchyManager)
         : base(userManager, userRepository, roleRepository, identityOptions, permissionChecker)
     {
-        _organizationUnitRepository = organizationUnitRepository;
+        _ouHierarchyManager = ouHierarchyManager;
     }
 
     [Authorize(IdentityPermissions.Users.Create)]
@@ -38,7 +39,7 @@ public class CustomIdentityUserAppService : IdentityUserAppService
             throw new BusinessException(InternalRequestsManagementDomainErrorCodes.OrganizationUnitRequired);
         }
 
-        await _organizationUnitRepository.GetAsync(organizationUnitId);
+        await _ouHierarchyManager.GetAsync(organizationUnitId);
 
         var userDto = await base.CreateAsync(input);
 
@@ -58,7 +59,7 @@ public class CustomIdentityUserAppService : IdentityUserAppService
             throw new BusinessException(InternalRequestsManagementDomainErrorCodes.OrganizationUnitRequired);
         }
 
-        await _organizationUnitRepository.GetAsync(organizationUnitId);
+        await _ouHierarchyManager.GetAsync(organizationUnitId);
 
         var userDto = await base.UpdateAsync(id, input);
 

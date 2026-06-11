@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using InternalRequestsManagement.Permissions;
@@ -8,22 +6,17 @@ using InternalRequestsManagement.Requests.Mappers;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
-using Volo.Abp.Identity;
 
 namespace InternalRequestsManagement.Requests;
 
 [Authorize(InternalRequestsManagementPermissions.Requests.Default)]
 public class RequestTypeAppService : ApplicationService, IRequestTypeAppService
 {
-    private readonly IRequestTypeRepository _requestTypeRepository;
-    private readonly IOrganizationUnitRepository _organizationUnitRepository;
+    private readonly RequestTypeManager _requestTypeManager;
 
-    public RequestTypeAppService(
-        IRequestTypeRepository requestTypeRepository,
-        IOrganizationUnitRepository organizationUnitRepository)
+    public RequestTypeAppService(RequestTypeManager requestTypeManager)
     {
-        _requestTypeRepository = requestTypeRepository;
-        _organizationUnitRepository = organizationUnitRepository;
+        _requestTypeManager = requestTypeManager;
     }
 
     public async Task<ListResultDto<RequestTypeDto>> GetListAsync(
@@ -32,36 +25,17 @@ public class RequestTypeAppService : ApplicationService, IRequestTypeAppService
         bool? isActive = null,
         CancellationToken cancellationToken = default)
     {
-        var types = await _requestTypeRepository.GetListAsync(search, organizationUnitId, isActive, cancellationToken);
-        var ouIds = types.Where(t => t.OrganizationUnitId.HasValue).Select(t => t.OrganizationUnitId!.Value).Distinct().ToList();
-
-        var ous = await _organizationUnitRepository.GetListAsync(cancellationToken: cancellationToken);
-        var ouLookup = ous.Where(o => ouIds.Contains(o.Id)).ToDictionary(o => o.Id);
-
-        var dtos = RequestTypeMapper.ToDtos(types, ouLookup);
-
-        return new ListResultDto<RequestTypeDto>(dtos);
+        var types = await _requestTypeManager.GetListAsync(search, organizationUnitId, isActive, cancellationToken);
+        var ouLookup = await _requestTypeManager.GetOrganizationUnitLookupAsync(types, cancellationToken);
+        return new ListResultDto<RequestTypeDto>(RequestTypeMapper.ToDtos(types, ouLookup));
     }
 
     public async Task<ListResultDto<RequestTypeDto>> GetAvailableTypesAsync(
         Guid organizationUnitId,
         CancellationToken cancellationToken = default)
     {
-        var types = await _requestTypeRepository.GetAvailableForOrganizationUnitAsync(organizationUnitId, cancellationToken);
-
-        var dtos = new List<RequestTypeDto>();
-        foreach (var type in types)
-        {
-            string? ouName = null;
-            if (type.OrganizationUnitId.HasValue)
-            {
-                var ou = await _organizationUnitRepository.FindAsync(type.OrganizationUnitId.Value, cancellationToken: cancellationToken);
-                ouName = ou?.DisplayName;
-            }
-
-            dtos.Add(RequestTypeMapper.ToDto(type, ouName));
-        }
-
-        return new ListResultDto<RequestTypeDto>(dtos);
+        var types = await _requestTypeManager.GetAvailableForOrganizationUnitAsync(organizationUnitId, cancellationToken);
+        var ouLookup = await _requestTypeManager.GetOrganizationUnitLookupAsync(types, cancellationToken);
+        return new ListResultDto<RequestTypeDto>(RequestTypeMapper.ToDtos(types, ouLookup));
     }
 }
