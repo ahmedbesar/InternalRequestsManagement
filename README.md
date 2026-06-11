@@ -208,9 +208,30 @@ The `test` folder contains the `Domain.Tests`, `Application.Tests`, and
 
 ---
 
-## 5. Assumptions, decisions, and possible improvements
+## 5. Notes for reviewers (deliverables)
 
-**Key decisions**
+### Understanding of the feature
+
+Internal Requests Management lets users **create, manage, track, and review**
+work requests inside the company. The heart of the feature is that a request is
+not just a record with fields – it lives inside an **Organization Unit** and
+moves through a **clear lifecycle**, and both of those drive real behavior:
+which request types are available, who can be assigned, what extra information is
+mandatory, what each user is allowed to see and do, and what the dashboard
+reports. The implementation covers all seven business areas: creation, full
+management (view/edit/status), a searchable & filterable list, OU-based behavior,
+dynamic form rules, a summary dashboard, and user-context awareness (own /
+assigned / my unit / unassigned / overdue scopes).
+
+### Assumptions
+
+- Roles and per-user OU assignments are configured through the standard ABP
+  Identity UI (the sensible 3-role model in section 2 is the intended setup).
+- A single tenant / single company is the primary scenario.
+- A user's "home" OU is their **deepest** assigned Organization Unit; that
+  defines the subtree of requests they can see.
+
+### Important decisions
 
 - **Relevance-based visibility** instead of a blanket "view all" permission, so
   users only see requests connected to their OU subtree, or that they created or
@@ -222,13 +243,7 @@ The `test` folder contains the `Domain.Tests`, `Application.Tests`, and
 - The OU seeder **saves each unit individually** so ABP assigns a unique
   hierarchy code per sibling (the basis for subtree resolution).
 
-**Assumptions**
-
-- Roles and per-user OU assignments are configured through the standard ABP
-  Identity UI (a sensible 3-role model is described above).
-- A single tenant / single company is the primary scenario.
-
-**Given more time**
+### What I would improve given more time
 
 - Seed sample roles, users, and example requests automatically for a one-command
   demo.
