@@ -1,6 +1,7 @@
 ﻿using Volo.Abp.PermissionManagement;
 using Volo.Abp.SettingManagement;
 using Volo.Abp.Account;
+using Volo.Abp.FluentValidation;
 using Volo.Abp.Identity;
 using Volo.Abp.Mapperly;
 using Volo.Abp.FeatureManagement;
@@ -18,7 +19,8 @@ namespace InternalRequestsManagement;
     typeof(AbpIdentityApplicationModule),
     typeof(AbpAccountApplicationModule),
     typeof(AbpTenantManagementApplicationModule),
-    typeof(AbpSettingManagementApplicationModule)
+    typeof(AbpSettingManagementApplicationModule),
+    typeof(AbpFluentValidationModule)
     )]
 public class InternalRequestsManagementApplicationModule : AbpModule
 {
