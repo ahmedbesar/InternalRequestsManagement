@@ -1,68 +1,244 @@
-# InternalRequestsManagement
+# Internal Requests Management
 
-## About this solution
+A feature for creating, tracking, and reviewing **internal requests** inside an
+organization (bug reports, leave requests, access requests, deployments, and
+more). It is built on the **ABP Framework** (ASP.NET Core MVC / Razor Pages,
+Entity Framework Core, SQL Server) using a layered solution structure.
 
-This is a layered startup solution based on [Domain Driven Design (DDD)](https://abp.io/docs/latest/framework/architecture/domain-driven-design) practises. All the fundamental ABP modules are already installed. Check the [Application Startup Template](https://abp.io/docs/latest/solution-templates/layered-web-application) documentation for more info.
+The core idea: every request belongs to an **Organization Unit (OU)**, and what
+a user can see and do is driven by the OU they belong to and the role they have.
 
-### Pre-requirements
+---
 
-* [.NET10.0+ SDK](https://dotnet.microsoft.com/download/dotnet)
-* [Node v18 or 20](https://nodejs.org/en)
+## 1. What the feature does
 
-### Configurations
+A request captures the work item that one person asks another part of the
+company to handle. Each request has:
 
-The solution comes with a default configuration that works out of the box. However, you may consider to change the following configuration before running your solution:
+- **Title** and **description**
+- **Request type** (e.g. *Bug Report*, *Leave Request*, *Deployment Request*) –
+  the available types depend on the Organization Unit
+- **Priority** – `Low`, `Normal`, `High`, `Critical`
+- **Status** – the request lifecycle (see below)
+- **Requester** – the user who created it (captured automatically)
+- **Assigned person** – who is responsible for resolving it
+- **Due date**
+- **Organization Unit context** – the OU the request belongs to
+- **Justification / status notes** – required in certain situations
 
-* Check the `ConnectionStrings` in `appsettings.json` files under the `InternalRequestsManagement.Web` and `InternalRequestsManagement.DbMigrator` projects and change it if you need.
+The feature includes a **requests list** (search, filter, sort, paging), a
+**detail view** with full status history, modal-based **create / edit / assign /
+change-status** screens, and a **dashboard** that summarizes the current state.
 
-### Before running the application
+### Request lifecycle (statuses)
 
-* Run `abp install-libs` command on your solution folder to install client-side package dependencies. This step is automatically done when you create a new solution, if you didn't especially disabled it. However, you should run it yourself if you have first cloned this solution from your source control, or added a new client-side package dependency to your solution.
-* Run `InternalRequestsManagement.DbMigrator` to create the initial database. This step is also automatically done when you create a new solution, if you didn't especially disabled it. This should be done in the first run. It is also needed if a new database migration is added to the solution later.
-
-#### Generating a Signing Certificate
-
-In the production environment, you need to use a production signing certificate. ABP Framework sets up signing and encryption certificates in your application and expects an `openiddict.pfx` file in your application.
-
-To generate a signing certificate, you can use the following command:
-
-```bash
-dotnet dev-certs https -v -ep openiddict.pfx -p e9392c31-05ba-4b3e-a8ff-9e690bccfb52
+```
+Draft ──▶ Submitted ──▶ In Progress ──▶ Resolved ──▶ Closed
+   │           │              │   ▲           │
+   │           │              ▼   │           └──▶ (re-open) In Progress
+   │           │           On Hold┘
+   ▼           ▼              │
+Cancelled   Rejected ◀────────┘
 ```
 
-> `e9392c31-05ba-4b3e-a8ff-9e690bccfb52` is the password of the certificate, you can change it to any password you want.
+- Allowed transitions are enforced in the domain layer; invalid jumps are
+  rejected.
+- `Closed`, `Cancelled`, and `Rejected` are **terminal** – a request in these
+  states can no longer be edited or transitioned.
+- Moving to **On Hold**, **Rejected**, or **Cancelled** **requires a note**.
+- Every status change is recorded in the request's **status history** (who,
+  when, from → to, and the note).
 
-It is recommended to use **two** RSA certificates, distinct from the certificate(s) used for HTTPS: one for encryption, one for signing.
+### Dynamic business rules
 
-For more information, please refer to: [OpenIddict Certificate Configuration](https://documentation.openiddict.com/configuration/encryption-and-signing-credentials.html#registering-a-certificate-recommended-for-production-ready-scenarios)
+The form is not static – its requirements change with the data entered and the
+selected request type:
 
-> Also, see the [Configuring OpenIddict](https://abp.io/docs/latest/Deployment/Configuring-OpenIddict#production-environment) documentation for more information.
+- **Request type drives requirements** – some types require a **justification**
+  (e.g. *Feature Request*, *Access Request*) and some require a **due date**
+  (e.g. *Leave Request*, *Deployment Request*).
+- **`Critical` priority** always forces both a **justification** and a **due
+  date**, regardless of type.
+- **Available request types depend on the OU** – an OU only sees its own types
+  plus the global ones (see below).
+- These rules are validated **both on the client** (immediate feedback) **and on
+  the server** (authoritative), so the UI and backend never disagree.
 
-### Solution structure
+### Dashboard / summary view
 
-This is a layered monolith application that consists of the following applications:
+The dashboard (scoped to the current user's OU context) shows:
 
-* `InternalRequestsManagement.DbMigrator`: A console application which applies the migrations and also seeds the initial data. It is useful on development as well as on production environment.
-* `InternalRequestsManagement.Web`: ASP.NET Core MVC / Razor Pages application that is the essential web application of the solution.
+- **Open**, **Overdue**, and **Unassigned** request counts
+- **Breakdown by status**
+- **Breakdown by type**
+- **Activity by Organization Unit**
+- **Most active assignees**
 
-#### Test Projects
+---
 
-The `test` folder contains the following test projects:
+## 2. Organization Units and the 3 roles
 
-* `InternalRequestsManagement.Application.Tests`: Application layer tests.
-* `InternalRequestsManagement.Domain.Tests`: Domain layer tests.
-* `InternalRequestsManagement.EntityFrameworkCore.Tests`: Entity Framework Core integration tests.
+### Organization Unit hierarchy
 
+The seeder creates this OU tree under the company root **T4Trust**:
 
+```
+T4Trust
+├── Software Development
+│   ├── UI/UX Team
+│   ├── Backend Team
+│   └── DevOps Team
+└── Human Resources
+    ├── Recruitment Team
+    ├── Employee Relations Team
+    └── Training Team
+```
 
+Each request type is attached to an OU (or is **global**). A user assigned to a
+team sees the request types of that team **and** the global ones (*General
+Request*, *Access Request*, *Document Request*).
 
-## Deploying the application
+### How visibility works with OUs (relevance-based)
 
-Deploying an ABP application follows the same process as deploying any .NET or ASP.NET Core application. However, there are important considerations to keep in mind. For detailed guidance, refer to ABP's [deployment documentation](https://abp.io/docs/latest/Deployment/Index).
+Visibility is **derived from the user's own Organization Unit** – there is no
+"see everything" bypass. A user can see a request if **any** of these is true:
 
-### Additional resources
+1. The request belongs to the user's **OU subtree** (their deepest assigned OU
+   and all of its descendants), **or**
+2. The user **created** the request, **or**
+3. The request is **assigned to** the user.
 
-You can see the following resources to learn more about your solution and the ABP Framework:
+The subtree is resolved by walking the OU tree via `ParentId`, so a manager of
+**Software Development** sees Software Development + UI/UX + Backend + DevOps,
+but **not** Human Resources. Someone in the **UI/UX Team** only sees UI/UX
+requests (plus their own / assigned ones). Assignment is also constrained: you
+can only assign a request to a user inside the request's OU subtree.
 
-* [Web Application Development Tutorial](https://abp.io/docs/latest/tutorials/book-store/part-1)
-* [Application Startup Template](https://abp.io/docs/latest/startup-templates/application/index)
+### The 3 roles
+
+Roles are permission-based. The recommended setup uses three roles, each granted
+the matching permissions under **Internal Requests Management** (configured in
+*Administration → Identity → Roles*):
+
+| Role | Typical permissions | What they can do |
+|------|--------------------|------------------|
+| **Employee** | `Requests` (view), `Requests.Create` | Create requests and view the ones relevant to them (their OU subtree + own + assigned). Track status and read history. |
+| **Manager** | `Requests` + `Create`, `Edit`, `ChangeStatus`, `Assign`, `Dashboard` | Everything an Employee can do, plus edit requests, move them through the lifecycle, assign people within their OU subtree, and use the dashboard for their OU. |
+| **Administrator** | All of the above | Full access; combined with an assignment to the **root OU** an admin effectively sees the whole company. |
+
+> Roles interact with OUs by **layering**: the **role** decides *which actions*
+> a user may perform, while the user's **Organization Unit** decides *which
+> requests* those actions apply to. A Manager in HR manages HR requests; a
+> Manager in Software Development manages Software Development requests.
+
+---
+
+## 3. How to run the project
+
+### Prerequisites
+
+- [.NET 10.0+ SDK](https://dotnet.microsoft.com/download/dotnet)
+- **SQL Server** (LocalDB, Express, or full) reachable from the connection string
+
+### Step 1 – Configure the database connection
+
+Check the `ConnectionStrings:Default` value in the `appsettings.json` of both:
+
+- `src/InternalRequestsManagement.DbMigrator`
+- `src/InternalRequestsManagement.Web`
+
+Update it if your SQL Server instance or database name differs.
+
+### Step 2 – Create the database and seed data
+
+Run the migrator once. It applies all EF Core migrations and seeds the initial
+data (admin user, OU hierarchy, and request types):
+
+```bash
+dotnet run --project src/InternalRequestsManagement.DbMigrator
+```
+
+> If the client-side libraries are missing, run `abp install-libs` in the
+> solution root first. (Pre-installed in this repository, so usually not needed.)
+
+### Step 3 – Run the web application
+
+```bash
+dotnet run --project src/InternalRequestsManagement.Web
+```
+
+Then browse to the URL shown in the console (e.g. `https://localhost:44397`).
+
+### Step 4 – Log in and set up roles
+
+Sign in with the default administrator account created by the seeder:
+
+- **Username:** `admin`
+- **Password:** `1q2w3E*`
+
+Then, to exercise the OU/role behavior:
+
+1. Go to **Administration → Identity → Roles** and create **Employee**,
+   **Manager**, and **Administrator** roles, granting the permissions described
+   above.
+2. Go to **Administration → Identity → Organization Units** and assign users to
+   the relevant OUs (e.g. a manager to *Software Development*, an employee to
+   *UI/UX Team*).
+3. Open **Requests** and **Dashboard** from the main menu and create a few
+   requests as different users to see how OU scoping and role permissions apply.
+
+---
+
+## 4. Solution structure
+
+A layered monolith:
+
+| Project | Responsibility |
+|---------|----------------|
+| `InternalRequestsManagement.Domain.Shared` | Enums, constants, error codes, localization |
+| `InternalRequestsManagement.Domain` | Entities, the `RequestManager` domain service, repository interfaces |
+| `InternalRequestsManagement.Application.Contracts` | DTOs, service interfaces, permissions |
+| `InternalRequestsManagement.Application` | Application services, validators, OU subtree resolver |
+| `InternalRequestsManagement.EntityFrameworkCore` | DbContext, repositories, migrations, data seeders |
+| `InternalRequestsManagement.Web` | Razor Pages UI (list, modals, dashboard), menus |
+| `InternalRequestsManagement.DbMigrator` | Console app that migrates and seeds the database |
+
+The `test` folder contains the `Domain.Tests`, `Application.Tests`, and
+`EntityFrameworkCore.Tests` projects.
+
+---
+
+## 5. Assumptions, decisions, and possible improvements
+
+**Key decisions**
+
+- **Relevance-based visibility** instead of a blanket "view all" permission, so
+  users only see requests connected to their OU subtree, or that they created or
+  were assigned. This keeps data isolation meaningful across departments.
+- **Rich domain model** – status transitions, note/justification/due-date rules,
+  and assignment constraints live in the `RequestManager` domain service and
+  return explicit results, so the rules can't be bypassed from the UI.
+- **Server + client validation parity** – the same rules run on both sides.
+- The OU seeder **saves each unit individually** so ABP assigns a unique
+  hierarchy code per sibling (the basis for subtree resolution).
+
+**Assumptions**
+
+- Roles and per-user OU assignments are configured through the standard ABP
+  Identity UI (a sensible 3-role model is described above).
+- A single tenant / single company is the primary scenario.
+
+**Given more time**
+
+- Seed sample roles, users, and example requests automatically for a one-command
+  demo.
+- Email / in-app notifications on assignment and status changes.
+- Automated unit and integration tests around the lifecycle and OU scoping.
+- Configurable, per-OU request type management from the UI.
+
+---
+
+## Additional resources
+
+- ABP Framework documentation: https://abp.io/docs/latest
+- Deployment guidance: https://abp.io/docs/latest/Deployment/Index
