@@ -1,0 +1,39 @@
+@page
+@using Microsoft.AspNetCore.Mvc.Localization
+@using InternalRequestsManagement.Localization
+@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
+@model InternalRequestsManagement.Web.Pages.Requests.ChangeStatusModalModel
+@inject IHtmlLocalizer<InternalRequestsManagementResource> L
+@{
+    Layout = null;
+}
+
+<abp-modal>
+    <abp-modal-header title="@L["ChangeStatus"].Value"></abp-modal-header>
+    <form id="ChangeStatusForm">
+        <input type="hidden" id="StatusRequestId" value="@Model.Request?.Id" />
+        <abp-modal-body>
+            <div class="mb-3">
+                <label class="form-label">@L["RequestStatus"] <span class="text-danger">*</span></label>
+                <select class="form-select" id="NewStatusSelect" required>
+                    <option value="">@L["SelectStatus"]</option>
+                    @foreach (var s in Model.AllowedNextStatuses)
+                    {
+                        <option value="@((int)s)">@L["Status:" + s.ToString()]</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-3" id="NoteRow">
+                <label class="form-label" for="StatusNote">
+                    @L["StatusChangeNote"] <span id="NoteRequired" class="text-danger" style="display:none">*</span>
+                </label>
+                <textarea class="form-control" id="StatusNote" rows="3" maxlength="2000"></textarea>
+                <div id="NoteHint" class="form-text text-muted" style="display:none">@L["NoteRequired"]</div>
+            </div>
+            <div id="StatusResultError" class="alert alert-danger" style="display:none"></div>
+        </abp-modal-body>
+        <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)"></abp-modal-footer>
+    </form>
+</abp-modal>
+
+<abp-script src="/Pages/Requests/change-status-modal.js" />

@@ -1,0 +1,114 @@
+@page
+@using Microsoft.AspNetCore.Mvc.Localization
+@using InternalRequestsManagement.Localization
+@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
+@model InternalRequestsManagement.Web.Pages.Requests.DetailModalModel
+@inject IHtmlLocalizer<InternalRequestsManagementResource> L
+@{
+    Layout = null;
+    var req = Model.Request;
+}
+
+<abp-modal size="Large">
+    <abp-modal-header title="@L["RequestDetail"].Value"></abp-modal-header>
+    <abp-modal-body>
+        @if (req != null)
+        {
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h5>@req.Title</h5>
+                    <p class="text-muted">@req.Description</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    @{
+                        var statusClass = req.Status switch {
+                            InternalRequestsManagement.Requests.RequestStatus.Draft => "secondary",
+                            InternalRequestsManagement.Requests.RequestStatus.Submitted => "info",
+                            InternalRequestsManagement.Requests.RequestStatus.InProgress => "primary",
+                            InternalRequestsManagement.Requests.RequestStatus.OnHold => "warning",
+                            InternalRequestsManagement.Requests.RequestStatus.Resolved => "success",
+                            InternalRequestsManagement.Requests.RequestStatus.Closed => "dark",
+                            InternalRequestsManagement.Requests.RequestStatus.Cancelled => "secondary",
+                            InternalRequestsManagement.Requests.RequestStatus.Rejected => "danger",
+                            _ => "secondary"
+                        };
+                        var priorityClass = req.Priority switch {
+                            InternalRequestsManagement.Requests.RequestPriority.Low => "secondary",
+                            InternalRequestsManagement.Requests.RequestPriority.Normal => "primary",
+                            InternalRequestsManagement.Requests.RequestPriority.High => "warning",
+                            InternalRequestsManagement.Requests.RequestPriority.Critical => "danger",
+                            _ => "secondary"
+                        };
+                    }
+                    <span class="badge bg-@statusClass fs-6 mb-1">@L["Status:" + req.Status.ToString()]</span><br />
+                    <span class="badge bg-@priorityClass">@L["Priority:" + req.Priority.ToString()]</span>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <strong>@L["RequestType"]:</strong><br />
+                    @req.RequestTypeName
+                </div>
+                <div class="col-md-4">
+                    <strong>@L["Requester"]:</strong><br />
+                    @req.RequesterName
+                </div>
+                <div class="col-md-4">
+                    <strong>@L["AssignedUser"]:</strong><br />
+                    @(req.AssignedUserName ?? "—")
+                </div>
+                <div class="col-md-4">
+                    <strong>@L["OrganizationUnit"]:</strong><br />
+                    @req.OrganizationUnitName
+                </div>
+                <div class="col-md-4">
+                    <strong>@L["DueDate"]:</strong><br />
+                    @(req.DueDate.HasValue ? req.DueDate.Value.ToString("dd MMM yyyy") : "—")
+                </div>
+                <div class="col-md-4">
+                    <strong>@L["CreationTime"]:</strong><br />
+                    @req.CreationTime.ToString("dd MMM yyyy HH:mm")
+                </div>
+                @if (!string.IsNullOrWhiteSpace(req.Justification))
+                {
+                    <div class="col-12">
+                        <strong>@L["Justification"]:</strong><br />
+                        @req.Justification
+                    </div>
+                }
+            </div>
+
+            <hr />
+            <h6>@L["StatusHistory"]</h6>
+            @if (!req.StatusHistory.Any())
+            {
+                <p class="text-muted">@L["NoStatusHistory"]</p>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var h in req.StatusHistory)
+                    {
+                        <li class="list-group-item px-0">
+                            <div class="d-flex justify-content-between">
+                                <span>
+                                    <strong>@L["Status:" + h.FromStatus.ToString()]</strong>
+                                    <i class="fa fa-arrow-right mx-1 text-muted"></i>
+                                    <strong>@L["Status:" + h.ToStatus.ToString()]</strong>
+                                    <small class="text-muted ms-2">by @h.ChangedByUserName</small>
+                                </span>
+                                <small class="text-muted">@h.ChangedAt.ToString("dd MMM yyyy HH:mm")</small>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(h.Note))
+                            {
+                                <div class="text-muted small mt-1">@h.Note</div>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        }
+    </abp-modal-body>
+    <abp-modal-footer buttons="@AbpModalButtons.Close"></abp-modal-footer>
+</abp-modal>

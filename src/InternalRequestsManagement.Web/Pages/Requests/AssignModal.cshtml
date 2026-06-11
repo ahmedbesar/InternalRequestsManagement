@@ -1,0 +1,61 @@
+@page
+@using Microsoft.AspNetCore.Mvc.Localization
+@using InternalRequestsManagement.Localization
+@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
+@model InternalRequestsManagement.Web.Pages.Requests.AssignModalModel
+@inject IHtmlLocalizer<InternalRequestsManagementResource> L
+@{
+    Layout = null;
+}
+
+<abp-modal>
+    <abp-modal-header title="@L["AssignRequest"].Value"></abp-modal-header>
+    <form id="AssignForm">
+        <input type="hidden" id="AssignRequestId" value="@Model.Request?.Id" />
+        <abp-modal-body>
+            <div class="mb-3">
+                <label class="form-label">@L["AssignedUser"]</label>
+                <select class="form-select" id="AssigneeSelect">
+                    <option value="">@L["UnassignRequest"]</option>
+                    @foreach (var user in Model.AssignableUsers)
+                    {
+                        var userSelected = Model.Request?.AssignedUserId == user.Id;
+                        <option value="@user.Id" selected="@userSelected">
+                            @user.DisplayName
+                        </option>
+                    }
+                </select>
+                <div class="form-text text-muted">@L["Scope:MyOrganizationUnit"]</div>
+            </div>
+            <div id="AssignResultError" class="alert alert-danger" style="display:none"></div>
+        </abp-modal-body>
+        <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)"></abp-modal-footer>
+    </form>
+</abp-modal>
+
+<script>
+    abp.modals.assignRequest = function () {
+        return {
+            initModal: function (publicApi, args) {
+                var $modal = publicApi.getModal();
+                var l = abp.localization.getResource('InternalRequestsManagement');
+                var requestService = internalRequestsManagement.requests.request;
+
+                $modal.find('#AssignForm').on('submit', function (e) {
+                    e.preventDefault();
+                    var id = $modal.find('#AssignRequestId').val();
+                    var input = { assignedUserId: $modal.find('#AssigneeSelect').val() || null };
+
+                    requestService.assign(id, input).then(function (result) {
+                        if (!result.isSuccess) {
+                            $modal.find('#AssignResultError').text(result.errors[0]?.message).show();
+                            return;
+                        }
+                        abp.notify.success(l('SuccessfullySaved'));
+                        publicApi.close();
+                    });
+                });
+            }
+        };
+    };
+</script>

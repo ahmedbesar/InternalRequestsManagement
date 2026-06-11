@@ -1,0 +1,91 @@
+@page
+@using Microsoft.AspNetCore.Mvc.Localization
+@using InternalRequestsManagement.Localization
+@using InternalRequestsManagement.Permissions
+@using InternalRequestsManagement.Web.Pages.Requests
+@model IndexModel
+@inject IHtmlLocalizer<InternalRequestsManagementResource> L
+@section scripts {
+    <abp-script src="/Pages/Requests/index.js" />
+}
+@{
+    ViewData["Title"] = L["Requests"].Value;
+}
+
+<abp-card>
+    <abp-card-header>
+        <abp-row>
+            <abp-column size-md="_6">
+                <abp-card-title>@L["Requests"]</abp-card-title>
+            </abp-column>
+            <abp-column size-md="_6" class="text-end">
+                @if (Model.CanCreate)
+                {
+                    <abp-button id="NewRequestButton"
+                                text="@L["NewRequest"].Value"
+                                icon="fa fa-plus"
+                                button-type="Primary" />
+                }
+            </abp-column>
+        </abp-row>
+    </abp-card-header>
+    <abp-card-body>
+        <abp-row class="mb-3">
+            <abp-column>
+                <ul class="nav nav-pills" id="scopeTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-scope="0">@L["Scope:All"]</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-scope="1">@L["Scope:Mine"]</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-scope="2">@L["Scope:AssignedToMe"]</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-scope="3">@L["Scope:MyOrganizationUnit"]</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-scope="4">@L["Scope:Unassigned"]</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-scope="5">@L["Scope:Overdue"]</a>
+                    </li>
+                </ul>
+            </abp-column>
+        </abp-row>
+        <abp-row class="mb-3 g-2">
+            <abp-column size-md="_3">
+                <input type="text" id="SearchInput" class="form-control" placeholder="@L["RequestTitle"].Value..." />
+            </abp-column>
+            <abp-column size-md="_2">
+                <select id="StatusFilter" class="form-select">
+                    <option value="">@L["RequestStatus"]</option>
+                    @foreach (InternalRequestsManagement.Requests.RequestStatus s in Enum.GetValues(typeof(InternalRequestsManagement.Requests.RequestStatus)))
+                    {
+                        <option value="@((int)s)">@L["Status:" + s.ToString()]</option>
+                    }
+                </select>
+            </abp-column>
+            <abp-column size-md="_2">
+                <select id="PriorityFilter" class="form-select">
+                    <option value="">@L["RequestPriority"]</option>
+                    @foreach (InternalRequestsManagement.Requests.RequestPriority p in Enum.GetValues(typeof(InternalRequestsManagement.Requests.RequestPriority)))
+                    {
+                        <option value="@((int)p)">@L["Priority:" + p.ToString()]</option>
+                    }
+                </select>
+            </abp-column>
+            <abp-column size-md="_3">
+                <select id="TypeFilter" class="form-select">
+                    <option value="">@L["RequestType"]</option>
+                    @foreach (var t in Model.RequestTypes)
+                    {
+                        <option value="@t.Id">@t.Name</option>
+                    }
+                </select>
+            </abp-column>
+        </abp-row>
+        <abp-table striped-rows="true" id="RequestsTable" class="nowrap"></abp-table>
+    </abp-card-body>
+</abp-card>

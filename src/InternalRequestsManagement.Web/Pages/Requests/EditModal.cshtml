@@ -1,0 +1,89 @@
+@page
+@using Microsoft.AspNetCore.Mvc.Localization
+@using InternalRequestsManagement.Localization
+@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
+@model InternalRequestsManagement.Web.Pages.Requests.EditModalModel
+@inject IHtmlLocalizer<InternalRequestsManagementResource> L
+@{
+    Layout = null;
+    var ouPathJson = System.Text.Json.JsonSerializer.Serialize(Model.OrganizationUnitPath);
+}
+
+<abp-modal>
+    <abp-modal-header title="@L["EditRequest"].Value"></abp-modal-header>
+    <form id="EditRequestForm">
+        <input type="hidden" id="EditId" value="@Model.Request?.Id" />
+        <abp-modal-body>
+
+            <div class="mb-3">
+                <label class="form-label">@L["OrganizationUnit"] <span class="text-danger">*</span></label>
+                <div id="edit-ou-cascade"
+                     data-select-placeholder="@L["SelectOrganizationUnit"].Value"
+                     data-level-label="@L["OrganizationUnitLevel"].Value">
+                    <input type="hidden" name="OrganizationUnitId" id="EditOrganizationUnitId" value="@Model.Request?.OrganizationUnitId" />
+                    <div class="mb-2 ou-level-container" data-level="1">
+                        <select class="form-select ou-level-select">
+                            <option value="">@L["SelectOrganizationUnit"]</option>
+                            @foreach (var ou in Model.RootOrganizationUnits)
+                            {
+                                <option value="@ou.Id" data-has-children="@ou.HasChildren.ToString().ToLowerInvariant()">@ou.DisplayName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="EditTypeId">@L["RequestType"] <span class="text-danger">*</span></label>
+                <select class="form-select" id="EditTypeId" name="RequestTypeId" required disabled>
+                    <option value="">@L["SelectRequestType"]</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="EditTitleInput">@L["RequestTitle"] <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="EditTitleInput" name="Title" required maxlength="256" value="@Model.Request?.Title" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="EditDescriptionInput">@L["RequestDescription"] <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="EditDescriptionInput" name="Description" rows="3" required maxlength="4000">@Model.Request?.Description</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="EditPrioritySelect">@L["RequestPriority"] <span class="text-danger">*</span></label>
+                <select class="form-select" id="EditPrioritySelect" name="Priority" required>
+                    @{ var pLow = Model.Request?.Priority == InternalRequestsManagement.Requests.RequestPriority.Low; }
+                    <option value="1" selected="@pLow">@L["Priority:Low"]</option>
+                    @{ var pNormal = Model.Request?.Priority == InternalRequestsManagement.Requests.RequestPriority.Normal; }
+                    <option value="2" selected="@pNormal">@L["Priority:Normal"]</option>
+                    @{ var pHigh = Model.Request?.Priority == InternalRequestsManagement.Requests.RequestPriority.High; }
+                    <option value="3" selected="@pHigh">@L["Priority:High"]</option>
+                    @{ var pCritical = Model.Request?.Priority == InternalRequestsManagement.Requests.RequestPriority.Critical; }
+                    <option value="4" selected="@pCritical">@L["Priority:Critical"]</option>
+                </select>
+            </div>
+
+            <div class="mb-3" id="EditDueDateRow">
+                <label class="form-label" for="EditDueDateInput">@L["DueDate"] <span id="EditDueDateRequired" class="text-danger" style="display:none">*</span></label>
+                <input type="date" class="form-control" id="EditDueDateInput" name="DueDate"
+                       value="@(Model.Request?.DueDate.HasValue == true ? Model.Request.DueDate!.Value.ToString("yyyy-MM-dd") : "")" />
+            </div>
+
+            <div class="mb-3" id="EditJustificationRow">
+                <label class="form-label" for="EditJustificationInput">@L["Justification"] <span id="EditJustificationRequired" class="text-danger" style="display:none">*</span></label>
+                <textarea class="form-control" id="EditJustificationInput" name="Justification" rows="2" maxlength="2000">@Model.Request?.Justification</textarea>
+            </div>
+
+            <div id="EditResultError" class="alert alert-danger" style="display:none"></div>
+        </abp-modal-body>
+        <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)"></abp-modal-footer>
+    </form>
+</abp-modal>
+
+<abp-script src="/Pages/Identity/Users/OrganizationUnitCascade.js" />
+<script>
+    var editOuInitialPath = @Html.Raw(ouPathJson);
+    var editRequestTypeId = '@Model.Request?.RequestTypeId';
+</script>
+<abp-script src="/Pages/Requests/edit-modal.js" />

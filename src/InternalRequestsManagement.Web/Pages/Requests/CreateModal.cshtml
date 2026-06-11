@@ -1,0 +1,81 @@
+@page
+@using Microsoft.AspNetCore.Mvc.Localization
+@using InternalRequestsManagement.Localization
+@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
+@model InternalRequestsManagement.Web.Pages.Requests.CreateModalModel
+@inject IHtmlLocalizer<InternalRequestsManagementResource> L
+@{
+    Layout = null;
+}
+
+<abp-modal>
+    <abp-modal-header title="@L["NewRequest"].Value"></abp-modal-header>
+    <form id="CreateRequestForm">
+        <abp-modal-body>
+            <div class="mb-3">
+                <label class="form-label">@L["OrganizationUnit"] <span class="text-danger">*</span></label>
+                <div id="ou-cascade"
+                     data-select-placeholder="@L["SelectOrganizationUnit"].Value"
+                     data-level-label="@L["OrganizationUnitLevel"].Value">
+                    <input type="hidden" name="OrganizationUnitId" id="OrganizationUnitId" />
+                    <div class="mb-2 ou-level-container" data-level="1">
+                        <select class="form-select ou-level-select">
+                            <option value="">@L["SelectOrganizationUnit"]</option>
+                            @foreach (var ou in Model.RootOrganizationUnits)
+                            {
+                                <option value="@ou.Id" data-has-children="@ou.HasChildren.ToString().ToLowerInvariant()">@ou.DisplayName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="TypeId">@L["RequestType"] <span class="text-danger">*</span></label>
+                <select class="form-select" id="TypeId" name="RequestTypeId" required disabled>
+                    <option value="">@L["SelectRequestType"]</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="TitleInput">@L["RequestTitle"] <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="TitleInput" name="Title" required maxlength="256" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="DescriptionInput">@L["RequestDescription"] <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="DescriptionInput" name="Description" rows="3" required maxlength="4000"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="PrioritySelect">@L["RequestPriority"] <span class="text-danger">*</span></label>
+                <select class="form-select" id="PrioritySelect" name="Priority" required>
+                    <option value="">@L["SelectPriority"]</option>
+                    <option value="1">@L["Priority:Low"]</option>
+                    <option value="2">@L["Priority:Normal"]</option>
+                    <option value="3">@L["Priority:High"]</option>
+                    <option value="4">@L["Priority:Critical"]</option>
+                </select>
+            </div>
+
+            <div class="mb-3" id="DueDateRow">
+                <label class="form-label" for="DueDateInput">@L["DueDate"] <span id="DueDateRequired" class="text-danger" style="display:none">*</span></label>
+                <input type="date" class="form-control" id="DueDateInput" name="DueDate" />
+            </div>
+
+            <div class="mb-3" id="JustificationRow">
+                <label class="form-label" for="JustificationInput">@L["Justification"] <span id="JustificationRequired" class="text-danger" style="display:none">*</span></label>
+                <textarea class="form-control" id="JustificationInput" name="Justification" rows="2" maxlength="2000"></textarea>
+                <div id="JustificationHint" class="form-text text-muted" style="display:none">
+                    @L["NoteRequired"]
+                </div>
+            </div>
+
+            <div id="CreateResultError" class="alert alert-danger" style="display:none"></div>
+        </abp-modal-body>
+        <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)"></abp-modal-footer>
+    </form>
+</abp-modal>
+
+<abp-script src="/Pages/Identity/Users/OrganizationUnitCascade.js" />
+<abp-script src="/Pages/Requests/create-modal.js" />
