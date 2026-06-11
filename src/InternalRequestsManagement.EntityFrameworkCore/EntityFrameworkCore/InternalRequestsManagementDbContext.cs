@@ -1,3 +1,4 @@
+using InternalRequestsManagement.Requests;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
@@ -25,7 +26,8 @@ public class InternalRequestsManagementDbContext :
     ITenantManagementDbContext,
     IIdentityDbContext
 {
-    /* Add DbSet properties for your Aggregate Roots / Entities here. */
+    public DbSet<Request> Requests { get; set; }
+    public DbSet<RequestType> RequestTypes { get; set; }
 
 
     #region Entities from the modules
@@ -79,13 +81,37 @@ public class InternalRequestsManagementDbContext :
         builder.ConfigureTenantManagement();
         builder.ConfigureBlobStoring();
         
-        /* Configure your own tables/entities inside here */
+        builder.Entity<RequestType>(b =>
+        {
+            b.ToTable(InternalRequestsManagementConsts.DbTablePrefix + "RequestTypes", InternalRequestsManagementConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(RequestTypeConsts.MaxNameLength);
+            b.Property(x => x.Description).HasMaxLength(RequestTypeConsts.MaxDescriptionLength);
+            b.HasIndex(x => x.OrganizationUnitId);
+            b.HasIndex(x => x.IsActive);
+        });
 
-        //builder.Entity<YourEntity>(b =>
-        //{
-        //    b.ToTable(InternalRequestsManagementConsts.DbTablePrefix + "YourEntities", InternalRequestsManagementConsts.DbSchema);
-        //    b.ConfigureByConvention(); //auto configure for the base class props
-        //    //...
-        //});
+        builder.Entity<Request>(b =>
+        {
+            b.ToTable(InternalRequestsManagementConsts.DbTablePrefix + "Requests", InternalRequestsManagementConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Title).IsRequired().HasMaxLength(RequestConsts.MaxTitleLength);
+            b.Property(x => x.Description).IsRequired().HasMaxLength(RequestConsts.MaxDescriptionLength);
+            b.Property(x => x.Justification).HasMaxLength(RequestConsts.MaxJustificationLength);
+            b.HasIndex(x => x.Status);
+            b.HasIndex(x => x.OrganizationUnitId);
+            b.HasIndex(x => x.AssignedUserId);
+            b.HasIndex(x => x.DueDate);
+            b.HasIndex(x => x.RequesterId);
+            b.HasMany(x => x.StatusHistory).WithOne().HasForeignKey(h => h.RequestId).IsRequired();
+        });
+
+        builder.Entity<RequestStatusHistory>(b =>
+        {
+            b.ToTable(InternalRequestsManagementConsts.DbTablePrefix + "RequestStatusHistories", InternalRequestsManagementConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Note).HasMaxLength(RequestConsts.MaxStatusNoteLength);
+            b.HasIndex(x => x.RequestId);
+        });
     }
 }
