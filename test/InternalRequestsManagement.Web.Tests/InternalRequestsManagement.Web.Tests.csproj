@@ -14,9 +14,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.3" />
-    <PackageReference Include="Volo.Abp.AspNetCore.TestBase" Version="10.4.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="HtmlAgilityPack" />
+    <PackageReference Include="Volo.Abp.AspNetCore.TestBase" />
     <ProjectReference Include="..\InternalRequestsManagement.Application.Tests\InternalRequestsManagement.Application.Tests.csproj" />
     <ProjectReference Include="..\..\src\InternalRequestsManagement.Web\InternalRequestsManagement.Web.csproj" />
     <ProjectReference Include="..\InternalRequestsManagement.EntityFrameworkCore.Tests\InternalRequestsManagement.EntityFrameworkCore.Tests.csproj" />

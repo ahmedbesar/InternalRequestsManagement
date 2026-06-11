@@ -9,13 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
-    <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Async" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.Autofac" Version="10.4.0" />
+    <PackageReference Include="Volo.Abp.Autofac" />
     <ProjectReference Include="..\InternalRequestsManagement.EntityFrameworkCore\InternalRequestsManagement.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\InternalRequestsManagement.Application.Contracts\InternalRequestsManagement.Application.Contracts.csproj" />
   </ItemGroup>
