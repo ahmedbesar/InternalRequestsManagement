@@ -11,8 +11,18 @@ public class InternalRequestsManagementPermissionDefinitionProvider : Permission
     {
         var myGroup = context.AddGroup(InternalRequestsManagementPermissions.GroupName);
 
-        //Define your own permissions here. Example:
-        //myGroup.AddPermission(InternalRequestsManagementPermissions.MyPermission1, L("Permission:MyPermission1"));
+        myGroup.AddPermission(
+            InternalRequestsManagementPermissions.Dashboard.Default,
+            L("Permission:Dashboard"));
+
+        var requestsPermission = myGroup.AddPermission(
+            InternalRequestsManagementPermissions.Requests.Default,
+            L("Permission:Requests"));
+        requestsPermission.AddChild(InternalRequestsManagementPermissions.Requests.Create, L("Permission:Requests.Create"));
+        requestsPermission.AddChild(InternalRequestsManagementPermissions.Requests.Edit, L("Permission:Requests.Edit"));
+        requestsPermission.AddChild(InternalRequestsManagementPermissions.Requests.Delete, L("Permission:Requests.Delete"));
+        requestsPermission.AddChild(InternalRequestsManagementPermissions.Requests.ChangeStatus, L("Permission:Requests.ChangeStatus"));
+        requestsPermission.AddChild(InternalRequestsManagementPermissions.Requests.Assign, L("Permission:Requests.Assign"));
     }
 
     private static LocalizableString L(string name)
