@@ -1,0 +1,94 @@
+@page
+@using Microsoft.AspNetCore.Mvc.Localization
+@using InternalRequestsManagement.Localization
+@model InternalRequestsManagement.Web.Pages.Dashboard.IndexModel
+@inject IHtmlLocalizer<InternalRequestsManagementResource> L
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <abp-script src="/Pages/Dashboard/index.js" />
+}
+@{
+    ViewData["Title"] = L["Dashboard"].Value;
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card text-bg-primary h-100">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="card-title text-white-50">@L["OpenRequests"]</h6>
+                    <h2 class="mb-0" id="OpenCount">—</h2>
+                </div>
+                <i class="fa fa-inbox fa-3x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-bg-danger h-100">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="card-title text-white-50">@L["OverdueRequests"]</h6>
+                    <h2 class="mb-0" id="OverdueCount">—</h2>
+                </div>
+                <i class="fa fa-clock fa-3x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-bg-warning h-100">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="card-title text-white-50">@L["UnassignedRequests"]</h6>
+                    <h2 class="mb-0" id="UnassignedCount">—</h2>
+                </div>
+                <i class="fa fa-user-slash fa-3x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">@L["RequestsByStatus"]</div>
+            <div class="card-body">
+                <canvas id="StatusChart" height="280"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">@L["RequestsByType"]</div>
+            <div class="card-body">
+                <canvas id="TypeChart" height="280"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">@L["RequestsByOrganizationUnit"]</div>
+            <div class="card-body">
+                <canvas id="OuChart" height="280"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">@L["MostActiveAssignees"]</div>
+            <div class="card-body">
+                <table class="table table-sm" id="AssigneesTable">
+                    <thead>
+                        <tr>
+                            <th>@L["AssigneeName"]</th>
+                            <th class="text-end">@L["RequestCount"]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="AssigneesBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
