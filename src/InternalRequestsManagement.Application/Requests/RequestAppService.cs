@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,13 +17,16 @@ public class RequestAppService : ApplicationService, IRequestAppService
 {
     private readonly RequestManager _requestManager;
     private readonly OrganizationUnitHierarchyManager _organizationUnitHierarchyManager;
+    private readonly RequestMapper _requestMapper;
 
     public RequestAppService(
         RequestManager requestManager,
-        OrganizationUnitHierarchyManager organizationUnitHierarchyManager)
+        OrganizationUnitHierarchyManager organizationUnitHierarchyManager,
+        RequestMapper requestMapper)
     {
         _requestManager = requestManager;
         _organizationUnitHierarchyManager = organizationUnitHierarchyManager;
+        _requestMapper = requestMapper;
     }
 
     public async Task<PagedResultDto<RequestDto>> GetListAsync(
@@ -47,9 +49,8 @@ public class RequestAppService : ApplicationService, IRequestAppService
             scopedOuIds, input.Scope, currentUserId,
             input.Sorting, input.MaxResultCount, input.SkipCount, cancellationToken);
 
-        var dtos = await MapRequestsToDtosAsync(items, cancellationToken);
-
-        return new PagedResultDto<RequestDto>(totalCount, dtos);
+        return new PagedResultDto<RequestDto>(totalCount,
+            await _requestMapper.ToDtosAsync(items, cancellationToken));
     }
 
     public async Task<RequestDetailDto> GetAsync(
@@ -59,11 +60,9 @@ public class RequestAppService : ApplicationService, IRequestAppService
         var requests = await _requestManager.GetWithHistoryAsync(id, cancellationToken);
         var request = requests.FirstOrDefault();
         if (request == null)
-        {
             throw new Volo.Abp.BusinessException(InternalRequestsManagementDomainErrorCodes.RequestNotFound);
-        }
 
-        return await MapToDetailDtoAsync(request, cancellationToken);
+        return await _requestMapper.ToDetailDtoAsync(request, cancellationToken);
     }
 
     [Authorize(InternalRequestsManagementPermissions.Requests.Create)]
@@ -79,7 +78,7 @@ public class RequestAppService : ApplicationService, IRequestAppService
         if (managerResult.IsFailed)
             return managerResult.ToResult<RequestDto>();
 
-        return Result.Ok(await MapToRequestDtoAsync(managerResult.Value, cancellationToken));
+        return Result.Ok(await _requestMapper.ToDtoAsync(managerResult.Value, cancellationToken));
     }
 
     [Authorize(InternalRequestsManagementPermissions.Requests.Edit)]
@@ -97,7 +96,7 @@ public class RequestAppService : ApplicationService, IRequestAppService
         if (managerResult.IsFailed)
             return managerResult.ToResult<RequestDto>();
 
-        return Result.Ok(await MapToRequestDtoAsync(managerResult.Value, cancellationToken));
+        return Result.Ok(await _requestMapper.ToDtoAsync(managerResult.Value, cancellationToken));
     }
 
     [Authorize(InternalRequestsManagementPermissions.Requests.ChangeStatus)]
@@ -114,7 +113,7 @@ public class RequestAppService : ApplicationService, IRequestAppService
         if (managerResult.IsFailed)
             return managerResult.ToResult<RequestDto>();
 
-        return Result.Ok(await MapToRequestDtoAsync(managerResult.Value, cancellationToken));
+        return Result.Ok(await _requestMapper.ToDtoAsync(managerResult.Value, cancellationToken));
     }
 
     [Authorize(InternalRequestsManagementPermissions.Requests.Assign)]
@@ -136,7 +135,7 @@ public class RequestAppService : ApplicationService, IRequestAppService
                 return managerResult.ToResult<RequestDto>();
         }
 
-        return Result.Ok(await MapToRequestDtoAsync(request, cancellationToken));
+        return Result.Ok(await _requestMapper.ToDtoAsync(request, cancellationToken));
     }
 
     [Authorize(InternalRequestsManagementPermissions.Requests.Delete)]
@@ -144,53 +143,4 @@ public class RequestAppService : ApplicationService, IRequestAppService
         Guid id,
         CancellationToken cancellationToken = default)
         => _requestManager.DeleteAsync(id, cancellationToken);
-
-    // ── Private mapping helpers ───────────────────────────────────────────────
-
-    private async Task<List<RequestDto>> MapRequestsToDtosAsync(
-        List<Request> requests,
-        CancellationToken cancellationToken)
-    {
-        if (requests.Count == 0)
-            return new List<RequestDto>();
-
-        var relations = await _requestManager.LoadRelationsAsync(requests, cancellationToken);
-        return requests
-            .Select(r => RequestMapper.ToDto(r, relations.Types, relations.OrganizationUnits, relations.Users))
-            .ToList();
-    }
-
-    private async Task<RequestDto> MapToRequestDtoAsync(
-        Request request,
-        CancellationToken cancellationToken)
-    {
-        var relations = await _requestManager.LoadRelationsAsync([request], cancellationToken);
-        return RequestMapper.ToDto(request, relations.Types, relations.OrganizationUnits, relations.Users);
-    }
-
-    private async Task<RequestDetailDto> MapToDetailDtoAsync(
-        Request request,
-        CancellationToken cancellationToken)
-    {
-        var relations = await _requestManager.LoadRelationsAsync([request], cancellationToken);
-        var requestDto = RequestMapper.ToDto(request, relations.Types, relations.OrganizationUnits, relations.Users);
-
-        relations.Types.TryGetValue(request.RequestTypeId, out var requestType);
-
-        var historyDtos = request.StatusHistory
-            .OrderBy(h => h.ChangedAt)
-            .Select(h =>
-            {
-                relations.Users.TryGetValue(h.ChangedByUserId, out var changedBy);
-                return RequestMapper.ToStatusHistoryDto(h, changedBy);
-            })
-            .ToList();
-
-        return RequestMapper.ToDetailDto(
-            requestDto,
-            requestType?.RequiresJustification ?? false,
-            requestType?.RequiresDueDate ?? false,
-            historyDtos,
-            RequestMapper.GetAllowedNextStatuses(request.Status));
-    }
 }
