@@ -10,4 +10,6 @@ public interface IOrganizationUnitLookupAppService : IApplicationService
     Task<ListResultDto<OrganizationUnitLookupDto>> GetChildrenAsync(Guid? parentId);
 
     Task<ListResultDto<OrganizationUnitLookupDto>> GetUserOrganizationUnitPathAsync(Guid userId);
+
+    Task<ListResultDto<OrganizationUnitLookupDto>> GetPathAsync(Guid ouId);
 }
