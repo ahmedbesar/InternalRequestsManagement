@@ -1,6 +1,7 @@
 (function ($) {
     var l = abp.localization.getResource('InternalRequestsManagement');
     var requestService = internalRequestsManagement.requests.request;
+    var requestTypeService = internalRequestsManagement.requests.requestType;
     var selectedTypeRequiresJustification = false;
     var selectedTypeRequiresDueDate = false;
 
@@ -156,7 +157,7 @@
     }
 
     function loadRequestTypes($modal, ouId) {
-        requestService.getAvailableTypes(ouId).then(function (result) {
+        requestTypeService.getAvailableTypes(ouId).then(function (result) {
             var $select = $modal.find('#TypeId');
             $select.empty().append('<option value="">' + l('SelectRequestType') + '</option>');
             $.each(result.items, function (_, t) {

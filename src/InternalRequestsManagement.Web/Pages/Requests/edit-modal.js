@@ -1,6 +1,7 @@
 (function ($) {
     var l = abp.localization.getResource('InternalRequestsManagement');
     var requestService = internalRequestsManagement.requests.request;
+    var requestTypeService = internalRequestsManagement.requests.requestType;
 
     abp.modals.editRequest = function () {
         return {
@@ -168,7 +169,7 @@
         var $select = $modal.find('#EditTypeId');
         $select.prop('disabled', true);
 
-        requestService.getAvailableTypes(ouId).then(function (result) {
+        requestTypeService.getAvailableTypes(ouId).then(function (result) {
             $select.empty().append('<option value="">' + l('SelectRequestType') + '</option>');
             $.each(result.items, function (_, t) {
                 $select.append(

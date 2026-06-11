@@ -13,4 +13,8 @@ public interface IRequestTypeAppService : IApplicationService
         Guid? organizationUnitId = null,
         bool? isActive = null,
         CancellationToken cancellationToken = default);
+
+    Task<ListResultDto<RequestTypeDto>> GetAvailableTypesAsync(
+        Guid organizationUnitId,
+        CancellationToken cancellationToken = default);
 }

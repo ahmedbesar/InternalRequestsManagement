@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using InternalRequestsManagement.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -47,6 +49,34 @@ public class OrganizationUnitLookupAppService : ApplicationService, IOrganizatio
 
     public Task<ListResultDto<OrganizationUnitLookupDto>> GetPathAsync(Guid ouId)
         => BuildPathAsync(ouId);
+
+    public async Task<ListResultDto<UserLookupDto>> GetOUAssignableUsersAsync(
+        Guid organizationUnitId,
+        CancellationToken cancellationToken = default)
+    {
+        var ou = await _organizationUnitRepository.GetAsync(organizationUnitId, cancellationToken: cancellationToken);
+
+        var allOus = await _organizationUnitRepository.GetListAsync(cancellationToken: cancellationToken);
+        var subtreeOuIds = allOus
+            .Where(x => x.Code == ou.Code || x.Code.StartsWith(ou.Code + "."))
+            .Select(x => x.Id)
+            .ToList();
+
+        var users = new List<IdentityUser>();
+        foreach (var ouId in subtreeOuIds)
+        {
+            var ouUsers = await _userRepository.GetListAsync(organizationUnitId: ouId, cancellationToken: cancellationToken);
+            users.AddRange(ouUsers);
+        }
+
+        var dtos = users
+            .DistinctBy(u => u.Id)
+            .OrderBy(u => u.UserName)
+            .Select(u => new UserLookupDto(u.Id, u.UserName, u.Name, u.Surname))
+            .ToList();
+
+        return new ListResultDto<UserLookupDto>(dtos);
+    }
 
     private async Task<ListResultDto<OrganizationUnitLookupDto>> BuildPathAsync(Guid organizationUnitId)
     {

@@ -39,12 +39,4 @@ public interface IRequestAppService : IApplicationService
     Task DeleteAsync(
         Guid id,
         CancellationToken cancellationToken = default);
-
-    Task<ListResultDto<RequestTypeDto>> GetAvailableTypesAsync(
-        Guid organizationUnitId,
-        CancellationToken cancellationToken = default);
-
-    Task<ListResultDto<UserLookupDto>> GetAssignableUsersAsync(
-        Guid organizationUnitId,
-        CancellationToken cancellationToken = default);
 }

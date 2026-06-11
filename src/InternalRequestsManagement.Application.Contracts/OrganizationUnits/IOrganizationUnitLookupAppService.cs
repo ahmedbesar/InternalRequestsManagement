@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
+using InternalRequestsManagement.Requests;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 
@@ -12,4 +14,8 @@ public interface IOrganizationUnitLookupAppService : IApplicationService
     Task<ListResultDto<OrganizationUnitLookupDto>> GetUserOrganizationUnitPathAsync(Guid userId);
 
     Task<ListResultDto<OrganizationUnitLookupDto>> GetPathAsync(Guid ouId);
+
+    Task<ListResultDto<UserLookupDto>> GetOUAssignableUsersAsync(
+        Guid organizationUnitId,
+        CancellationToken cancellationToken = default);
 }

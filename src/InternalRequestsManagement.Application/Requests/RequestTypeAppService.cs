@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,6 +43,29 @@ public class RequestTypeAppService : ApplicationService, IRequestTypeAppService
             return new RequestTypeDto(t.Id, t.Name, t.Description, t.OrganizationUnitId, ou?.DisplayName,
                 t.RequiresJustification, t.RequiresDueDate, t.IsActive);
         }).ToList();
+
+        return new ListResultDto<RequestTypeDto>(dtos);
+    }
+
+    public async Task<ListResultDto<RequestTypeDto>> GetAvailableTypesAsync(
+        Guid organizationUnitId,
+        CancellationToken cancellationToken = default)
+    {
+        var types = await _requestTypeRepository.GetAvailableForOrganizationUnitAsync(organizationUnitId, cancellationToken);
+
+        var dtos = new List<RequestTypeDto>();
+        foreach (var type in types)
+        {
+            string? ouName = null;
+            if (type.OrganizationUnitId.HasValue)
+            {
+                var ou = await _organizationUnitRepository.FindAsync(type.OrganizationUnitId.Value, cancellationToken: cancellationToken);
+                ouName = ou?.DisplayName;
+            }
+
+            dtos.Add(new RequestTypeDto(type.Id, type.Name, type.Description, type.OrganizationUnitId, ouName,
+                type.RequiresJustification, type.RequiresDueDate, type.IsActive));
+        }
 
         return new ListResultDto<RequestTypeDto>(dtos);
     }

@@ -171,57 +171,6 @@ public class RequestAppService : ApplicationService, IRequestAppService
         await _requestRepository.DeleteAsync(id, autoSave: true, cancellationToken: cancellationToken);
     }
 
-    public async Task<ListResultDto<RequestTypeDto>> GetAvailableTypesAsync(
-        Guid organizationUnitId,
-        CancellationToken cancellationToken = default)
-    {
-        var types = await _requestTypeRepository.GetAvailableForOrganizationUnitAsync(organizationUnitId, cancellationToken);
-
-        var dtos = new List<RequestTypeDto>();
-        foreach (var type in types)
-        {
-            string? ouName = null;
-            if (type.OrganizationUnitId.HasValue)
-            {
-                var ou = await _organizationUnitRepository.FindAsync(type.OrganizationUnitId.Value, cancellationToken: cancellationToken);
-                ouName = ou?.DisplayName;
-            }
-
-            dtos.Add(new RequestTypeDto(type.Id, type.Name, type.Description, type.OrganizationUnitId, ouName,
-                type.RequiresJustification, type.RequiresDueDate, type.IsActive));
-        }
-
-        return new ListResultDto<RequestTypeDto>(dtos);
-    }
-
-    public async Task<ListResultDto<UserLookupDto>> GetAssignableUsersAsync(
-        Guid organizationUnitId,
-        CancellationToken cancellationToken = default)
-    {
-        var ou = await _organizationUnitRepository.GetAsync(organizationUnitId, cancellationToken: cancellationToken);
-
-        var allOus = await _organizationUnitRepository.GetListAsync(cancellationToken: cancellationToken);
-        var subtreeOuIds = allOus
-            .Where(x => x.Code == ou.Code || x.Code.StartsWith(ou.Code + "."))
-            .Select(x => x.Id)
-            .ToList();
-
-        var users = new List<IdentityUser>();
-        foreach (var ouId in subtreeOuIds)
-        {
-            var ouUsers = await _userRepository.GetListAsync(organizationUnitId: ouId, cancellationToken: cancellationToken);
-            users.AddRange(ouUsers);
-        }
-
-        var dtos = users
-            .DistinctBy(u => u.Id)
-            .OrderBy(u => u.UserName)
-            .Select(u => new UserLookupDto(u.Id, u.UserName, u.Name, u.Surname))
-            .ToList();
-
-        return new ListResultDto<UserLookupDto>(dtos);
-    }
-
     private async Task<List<RequestDto>> MapRequestsToDtosAsync(
         List<Request> requests,
         CancellationToken cancellationToken)
