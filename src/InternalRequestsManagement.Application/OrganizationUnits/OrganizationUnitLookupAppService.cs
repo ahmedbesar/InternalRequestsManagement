@@ -69,11 +69,7 @@ public class OrganizationUnitLookupAppService : ApplicationService, IOrganizatio
             users.AddRange(ouUsers);
         }
 
-        var dtos = users
-            .DistinctBy(u => u.Id)
-            .OrderBy(u => u.UserName)
-            .Select(u => new UserLookupDto(u.Id, u.UserName, u.Name, u.Surname))
-            .ToList();
+        var dtos = OrganizationUnitLookupMapper.ToDtos(users);
 
         return new ListResultDto<UserLookupDto>(dtos);
     }
@@ -98,10 +94,7 @@ public class OrganizationUnitLookupAppService : ApplicationService, IOrganizatio
         foreach (var organizationUnit in path)
         {
             var children = await _organizationUnitManager.FindChildrenAsync(organizationUnit.Id);
-            items.Add(new OrganizationUnitLookupDto(
-                organizationUnit.Id,
-                organizationUnit.DisplayName,
-                children.Count > 0));
+            items.Add(OrganizationUnitLookupMapper.ToDto(organizationUnit, children.Count > 0));
         }
 
         return new ListResultDto<OrganizationUnitLookupDto>(items);
@@ -114,10 +107,7 @@ public class OrganizationUnitLookupAppService : ApplicationService, IOrganizatio
         {
             var child = children[i];
             var grandChildren = await _organizationUnitManager.FindChildrenAsync(child.Id);
-            items[i] = new OrganizationUnitLookupDto(
-                child.Id,
-                child.DisplayName,
-                grandChildren.Count > 0);
+            items[i] = OrganizationUnitLookupMapper.ToDto(child, grandChildren.Count > 0);
         }
 
         return items.ToList();

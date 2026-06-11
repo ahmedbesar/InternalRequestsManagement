@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using InternalRequestsManagement.OrganizationUnits;
 using InternalRequestsManagement.Permissions;
+using InternalRequestsManagement.Requests.Mappers;
 using FluentResults;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
@@ -190,42 +191,7 @@ public class RequestAppService : ApplicationService, IRequestAppService
         var users = await _userRepository.GetListAsync(cancellationToken: cancellationToken);
         var userLookup = users.Where(u => userIds.Contains(u.Id)).ToDictionary(u => u.Id);
 
-        return requests.Select(r => MapToRequestDto(r, typeLookup, ouLookup, userLookup)).ToList();
-    }
-
-    private static RequestDto MapToRequestDto(
-        Request request,
-        Dictionary<Guid, RequestType> typeLookup,
-        Dictionary<Guid, OrganizationUnit> ouLookup,
-        Dictionary<Guid, IdentityUser> userLookup)
-    {
-        typeLookup.TryGetValue(request.RequestTypeId, out var requestType);
-        ouLookup.TryGetValue(request.OrganizationUnitId, out var ou);
-        userLookup.TryGetValue(request.RequesterId, out var requester);
-        IdentityUser? assignee = null;
-        if (request.AssignedUserId.HasValue)
-        {
-            userLookup.TryGetValue(request.AssignedUserId.Value, out assignee);
-        }
-
-        return new RequestDto(
-            request.Id,
-            request.Title,
-            request.Description,
-            request.RequestTypeId,
-            requestType?.Name ?? "Unknown",
-            request.Priority,
-            request.Status,
-            request.RequesterId,
-            requester?.UserName ?? "Unknown",
-            request.AssignedUserId,
-            assignee?.UserName,
-            request.DueDate,
-            request.OrganizationUnitId,
-            ou?.DisplayName ?? "Unknown",
-            request.Justification,
-            request.CreationTime,
-            request.LastModificationTime);
+        return requests.Select(r => RequestMapper.ToDto(r, typeLookup, ouLookup, userLookup)).ToList();
     }
 
     private async Task<RequestDto> MapToRequestDtoAsync(
@@ -241,24 +207,7 @@ public class RequestAppService : ApplicationService, IRequestAppService
             assignee = await _userRepository.FindAsync(request.AssignedUserId.Value, cancellationToken: cancellationToken);
         }
 
-        return new RequestDto(
-            request.Id,
-            request.Title,
-            request.Description,
-            request.RequestTypeId,
-            requestType?.Name ?? "Unknown",
-            request.Priority,
-            request.Status,
-            request.RequesterId,
-            requester?.UserName ?? "Unknown",
-            request.AssignedUserId,
-            assignee?.UserName,
-            request.DueDate,
-            request.OrganizationUnitId,
-            ou?.DisplayName ?? "Unknown",
-            request.Justification,
-            request.CreationTime,
-            request.LastModificationTime);
+        return RequestMapper.ToDto(request, requestType, ou, requester, assignee);
     }
 
     private async Task<RequestDetailDto> MapToDetailDtoAsync(
@@ -276,53 +225,15 @@ public class RequestAppService : ApplicationService, IRequestAppService
             .Select(h =>
             {
                 userLookup.TryGetValue(h.ChangedByUserId, out var changedBy);
-                return new RequestStatusHistoryDto(
-                    h.Id,
-                    h.FromStatus,
-                    h.ToStatus,
-                    h.Note,
-                    h.ChangedByUserId,
-                    changedBy?.UserName ?? "Unknown",
-                    h.ChangedAt);
+                return RequestMapper.ToStatusHistoryDto(h, changedBy);
             })
             .ToList();
 
-        var allowedNextStatuses = GetAllowedNextStatuses(request.Status);
-
-        return new RequestDetailDto(
-            requestDto.Id,
-            requestDto.Title,
-            requestDto.Description,
-            requestDto.RequestTypeId,
-            requestDto.RequestTypeName,
+        return RequestMapper.ToDetailDto(
+            requestDto,
             requestType?.RequiresJustification ?? false,
             requestType?.RequiresDueDate ?? false,
-            requestDto.Priority,
-            requestDto.Status,
-            requestDto.RequesterId,
-            requestDto.RequesterName,
-            requestDto.AssignedUserId,
-            requestDto.AssignedUserName,
-            requestDto.DueDate,
-            requestDto.OrganizationUnitId,
-            requestDto.OrganizationUnitName,
-            requestDto.Justification,
-            requestDto.CreationTime,
-            requestDto.LastModificationTime,
             historyDtos,
-            allowedNextStatuses);
-    }
-
-    private static List<RequestStatus> GetAllowedNextStatuses(RequestStatus current)
-    {
-        return current switch
-        {
-            RequestStatus.Draft => [RequestStatus.Submitted, RequestStatus.Cancelled],
-            RequestStatus.Submitted => [RequestStatus.InProgress, RequestStatus.Rejected, RequestStatus.Cancelled],
-            RequestStatus.InProgress => [RequestStatus.OnHold, RequestStatus.Resolved, RequestStatus.Cancelled],
-            RequestStatus.OnHold => [RequestStatus.InProgress, RequestStatus.Cancelled, RequestStatus.Rejected],
-            RequestStatus.Resolved => [RequestStatus.Closed, RequestStatus.InProgress],
-            _ => []
-        };
+            RequestMapper.GetAllowedNextStatuses(request.Status));
     }
 }

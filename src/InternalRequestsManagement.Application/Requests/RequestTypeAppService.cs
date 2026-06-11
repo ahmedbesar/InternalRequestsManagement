@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using InternalRequestsManagement.Permissions;
+using InternalRequestsManagement.Requests.Mappers;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -37,12 +38,7 @@ public class RequestTypeAppService : ApplicationService, IRequestTypeAppService
         var ous = await _organizationUnitRepository.GetListAsync(cancellationToken: cancellationToken);
         var ouLookup = ous.Where(o => ouIds.Contains(o.Id)).ToDictionary(o => o.Id);
 
-        var dtos = types.Select(t =>
-        {
-            ouLookup.TryGetValue(t.OrganizationUnitId ?? Guid.Empty, out var ou);
-            return new RequestTypeDto(t.Id, t.Name, t.Description, t.OrganizationUnitId, ou?.DisplayName,
-                t.RequiresJustification, t.RequiresDueDate, t.IsActive);
-        }).ToList();
+        var dtos = RequestTypeMapper.ToDtos(types, ouLookup);
 
         return new ListResultDto<RequestTypeDto>(dtos);
     }
@@ -63,8 +59,7 @@ public class RequestTypeAppService : ApplicationService, IRequestTypeAppService
                 ouName = ou?.DisplayName;
             }
 
-            dtos.Add(new RequestTypeDto(type.Id, type.Name, type.Description, type.OrganizationUnitId, ouName,
-                type.RequiresJustification, type.RequiresDueDate, type.IsActive));
+            dtos.Add(RequestTypeMapper.ToDto(type, ouName));
         }
 
         return new ListResultDto<RequestTypeDto>(dtos);

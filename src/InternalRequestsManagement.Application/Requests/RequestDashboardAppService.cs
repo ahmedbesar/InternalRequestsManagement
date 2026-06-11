@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using InternalRequestsManagement.OrganizationUnits;
 using InternalRequestsManagement.Permissions;
+using InternalRequestsManagement.Requests.Mappers;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Identity;
@@ -58,21 +59,21 @@ public class RequestDashboardAppService : ApplicationService, IRequestDashboardA
 
         var byStatusDtos = byStatus
             .OrderBy(x => x.Status)
-            .Select(x => new StatusCountItemDto(x.Status, x.Status.ToString(), x.Count))
+            .Select(RequestDashboardMapper.ToStatusCountItem)
             .ToList();
 
         var byTypeDtos = byType
             .OrderByDescending(x => x.Count)
-            .Select(x => new TypeCountItemDto(x.RequestTypeId, x.RequestTypeName, x.Count))
+            .Select(RequestDashboardMapper.ToTypeCountItem)
             .ToList();
 
         var topAssigneeDtos = topAssignees
-            .Select(x => new AssigneeCountItemDto(x.UserId, x.UserName, x.Count))
+            .Select(RequestDashboardMapper.ToAssigneeCountItem)
             .ToList();
 
         var byOuDtos = await GetByOrganizationUnitAsync(scopedOuIds, cancellationToken);
 
-        return new RequestDashboardDto(
+        return RequestDashboardMapper.ToDto(
             openCount,
             overdueCount,
             unassignedCount,
@@ -98,7 +99,7 @@ public class RequestDashboardAppService : ApplicationService, IRequestDashboardA
 
         return counts
             .Where(c => ouLookup.ContainsKey(c.OrganizationUnitId))
-            .Select(c => new OuCountItemDto(c.OrganizationUnitId, ouLookup[c.OrganizationUnitId].DisplayName, c.Count))
+            .Select(c => RequestDashboardMapper.ToOuCountItem(c, ouLookup[c.OrganizationUnitId].DisplayName))
             .OrderByDescending(x => x.Count)
             .ToList();
     }
