@@ -15,12 +15,12 @@ namespace InternalRequestsManagement.Requests;
 [Authorize(InternalRequestsManagementPermissions.Requests.Default)]
 public class RequestAppService : ApplicationService, IRequestAppService
 {
-    private readonly RequestManager _requestManager;
+    private readonly IRequestManager _requestManager;
     private readonly OrganizationUnitHierarchyManager _organizationUnitHierarchyManager;
     private readonly RequestMapper _requestMapper;
 
     public RequestAppService(
-        RequestManager requestManager,
+        IRequestManager requestManager,
         OrganizationUnitHierarchyManager organizationUnitHierarchyManager,
         RequestMapper requestMapper)
     {

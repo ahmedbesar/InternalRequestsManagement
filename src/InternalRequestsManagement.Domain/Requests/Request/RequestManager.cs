@@ -12,7 +12,7 @@ using Volo.Abp.Timing;
 
 namespace InternalRequestsManagement.Requests;
 
-public class RequestManager : DomainService
+public class RequestManager : DomainService, IRequestManager
 {
     private static readonly Dictionary<RequestStatus, RequestStatus[]> AllowedTransitions = new()
     {
@@ -274,16 +274,16 @@ public class RequestManager : DomainService
     /// look-up dictionaries so the application layer can call <c>RequestMapper</c>
     /// without touching repositories directly.
     /// </summary>
-    public async Task<RequestRelations> LoadRelationsAsync(
+    public async Task<RequestRelationsDto> LoadRelationsAsync(
         IReadOnlyList<Request> requests,
         CancellationToken cancellationToken = default)
     {
         if (requests.Count == 0)
         {
-            return new RequestRelations(
-                new Dictionary<Guid, RequestType>(),
-                new Dictionary<Guid, OrganizationUnit>(),
-                new Dictionary<Guid, IdentityUser>());
+            return new RequestRelationsDto(
+                new Dictionary<Guid, RequestTypeRelationDto>(),
+                new Dictionary<Guid, OrganizationUnitRelationDto>(),
+                new Dictionary<Guid, UserRelationDto>());
         }
 
         var ouIds = requests.Select(r => r.OrganizationUnitId).Distinct().ToList();
@@ -295,15 +295,21 @@ public class RequestManager : DomainService
             .ToHashSet();
 
         var allTypes = await _requestTypeRepository.GetListAsync(cancellationToken: cancellationToken);
-        var typeLookup = allTypes.ToDictionary(t => t.Id);
+        var typeLookup = allTypes.ToDictionary(
+            t => t.Id,
+            t => new RequestTypeRelationDto(t.Id, t.Name, t.RequiresJustification, t.RequiresDueDate));
 
         var allOus = await _organizationUnitRepository.GetListAsync(cancellationToken: cancellationToken);
-        var ouLookup = allOus.Where(o => ouIds.Contains(o.Id)).ToDictionary(o => o.Id);
+        var ouLookup = allOus
+            .Where(o => ouIds.Contains(o.Id))
+            .ToDictionary(o => o.Id, o => new OrganizationUnitRelationDto(o.Id, o.DisplayName));
 
         var allUsers = await _userRepository.GetListAsync(cancellationToken: cancellationToken);
-        var userLookup = allUsers.Where(u => userIds.Contains(u.Id)).ToDictionary(u => u.Id);
+        var userLookup = allUsers
+            .Where(u => userIds.Contains(u.Id))
+            .ToDictionary(u => u.Id, u => new UserRelationDto(u.Id, u.UserName));
 
-        return new RequestRelations(typeLookup, ouLookup, userLookup);
+        return new RequestRelationsDto(typeLookup, ouLookup, userLookup);
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────

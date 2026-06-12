@@ -12,9 +12,9 @@ namespace InternalRequestsManagement.Requests;
 [Authorize(InternalRequestsManagementPermissions.Requests.Default)]
 public class RequestTypeAppService : ApplicationService, IRequestTypeAppService
 {
-    private readonly RequestTypeManager _requestTypeManager;
+    private readonly IRequestTypeManager _requestTypeManager;
 
-    public RequestTypeAppService(RequestTypeManager requestTypeManager)
+    public RequestTypeAppService(IRequestTypeManager requestTypeManager)
     {
         _requestTypeManager = requestTypeManager;
     }

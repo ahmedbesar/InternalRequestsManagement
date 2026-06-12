@@ -15,12 +15,12 @@ namespace InternalRequestsManagement.Requests;
 [Authorize(InternalRequestsManagementPermissions.Requests.Default)]
 public class RequestDashboardAppService : ApplicationService, IRequestDashboardAppService
 {
-    private readonly RequestManager _requestManager;
+    private readonly IRequestManager _requestManager;
     private readonly OrganizationUnitHierarchyManager _organizationUnitHierarchyManager;
     private readonly IClock _clock;
 
     public RequestDashboardAppService(
-        RequestManager requestManager,
+        IRequestManager requestManager,
         OrganizationUnitHierarchyManager organizationUnitHierarchyManager,
         IClock clock)
     {

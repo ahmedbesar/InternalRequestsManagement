@@ -11,16 +11,16 @@ namespace InternalRequestsManagement.Requests.Mappers;
 
 /// <summary>
 /// Handles all Request → DTO conversion.
-/// The async overloads own the <see cref="RequestManager.LoadRelationsAsync"/> call so
+/// The async overloads own the <see cref="IRequestManager.LoadRelationsAsync"/> call so
 /// the application service never has to touch relation-loading directly.
 /// </summary>
 public class RequestMapper : ITransientDependency
 {
     private const string Unknown = "Unknown";
 
-    private readonly RequestManager _requestManager;
+    private readonly IRequestManager _requestManager;
 
-    public RequestMapper(RequestManager requestManager)
+    public RequestMapper(IRequestManager requestManager)
     {
         _requestManager = requestManager;
     }
@@ -109,23 +109,40 @@ public class RequestMapper : ITransientDependency
 
     public static RequestDto ToDto(
         Request request,
-        IReadOnlyDictionary<Guid, RequestType> typeLookup,
-        IReadOnlyDictionary<Guid, OrganizationUnit> ouLookup,
-        IReadOnlyDictionary<Guid, IdentityUser> userLookup)
+        IReadOnlyDictionary<Guid, RequestTypeRelationDto> typeLookup,
+        IReadOnlyDictionary<Guid, OrganizationUnitRelationDto> ouLookup,
+        IReadOnlyDictionary<Guid, UserRelationDto> userLookup)
     {
         typeLookup.TryGetValue(request.RequestTypeId, out var requestType);
         ouLookup.TryGetValue(request.OrganizationUnitId, out var ou);
         userLookup.TryGetValue(request.RequesterId, out var requester);
-        IdentityUser? assignee = null;
+        UserRelationDto? assignee = null;
         if (request.AssignedUserId.HasValue)
             userLookup.TryGetValue(request.AssignedUserId.Value, out assignee);
 
-        return ToDto(request, requestType, ou, requester, assignee);
+        return new RequestDto(
+            request.Id,
+            request.Title,
+            request.Description,
+            request.RequestTypeId,
+            requestType?.Name ?? Unknown,
+            request.Priority,
+            request.Status,
+            request.RequesterId,
+            requester?.UserName ?? Unknown,
+            request.AssignedUserId,
+            assignee?.UserName,
+            request.DueDate,
+            request.OrganizationUnitId,
+            ou?.DisplayName ?? Unknown,
+            request.Justification,
+            request.CreationTime,
+            request.LastModificationTime);
     }
 
     public static RequestStatusHistoryDto ToStatusHistoryDto(
         RequestStatusHistory history,
-        IdentityUser? changedBy)
+        UserRelationDto? changedBy)
     {
         return new RequestStatusHistoryDto(
             history.Id,

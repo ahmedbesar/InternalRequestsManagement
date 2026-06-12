@@ -12,7 +12,7 @@ namespace InternalRequestsManagement.Requests;
 /// Domain service that wraps all <see cref="IRequestTypeRepository"/> queries
 /// and provides the OU-name lookup needed for DTO mapping.
 /// </summary>
-public class RequestTypeManager : DomainService
+public class RequestTypeManager : DomainService, IRequestTypeManager
 {
     private readonly IRequestTypeRepository _requestTypeRepository;
     private readonly IOrganizationUnitRepository _organizationUnitRepository;
